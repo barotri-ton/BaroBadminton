@@ -1,0 +1,48 @@
+{
+  "menu": {
+    "quickMatch": "Trận đấu nhanh",
+    "localMultiplayer": "Hai người chơi",
+    "onlineMatch": "Thi đấu trực tuyến",
+    "training": "Luyện tập",
+    "equipment": "Trang bị",
+    "settings": "Cài đặt",
+    "exitMatch": "Thoát trận"
+  },
+  "gameplay": {
+    "playerOne": "Người chơi 1",
+    "playerTwo": "Người chơi 2",
+    "start": "Bắt đầu trận đấu",
+    "serveTurn": "Đến lượt giao cầu",
+    "in": "Cầu trong sân",
+    "out": "Cầu ngoài sân",
+    "net": "Cầu chạm lưới",
+    "fault": "Phạm lỗi",
+    "matchPoint": "Điểm trận",
+    "gameOver": "Kết thúc hiệp",
+    "matchOver": "Kết thúc trận đấu",
+    "win": "Chiến thắng",
+    "pause": "Tạm dừng",
+    "resume": "Tiếp tục",
+    "rematch": "Đấu lại",
+    "home": "Về menu chính"
+  },
+  "equipment": {
+    "selectRacket": "Chọn vợt",
+    "brand": "Hãng sản xuất",
+    "model": "Dòng vợt",
+    "weight": "Trọng lượng",
+    "balance": "Điểm cân bằng",
+    "stiffness": "Độ cứng thân vợt",
+    "tension": "Độ căng dây",
+    "string": "Loại dây",
+    "preview": "Xem vợt 3D",
+    "shuttle": "Chọn cầu",
+    "feather": "Cầu lông vũ",
+    "nylon": "Cầu nhựa",
+    "speed": "Tốc độ cầu",
+    "flight": "Đặc tính đường bay",
+    "recommended": "Mức căng khuyến nghị",
+    "overLimit": "Độ căng vượt giới hạn của nhà sản xuất",
+    "reset": "Khôi phục thiết lập mặc định"
+  }
+}
