@@ -12,8 +12,8 @@ test('both players receive racket swing animation',()=>{
   assert.match(source,/opponent\.racketRig\.rotation\.x/);
 });
 test('athletes lean during movement and recover at rest',()=>{
-  assert.match(source,/actor\\.torsoRig\\.rotation\\.z/);
-  assert.match(source,/actor\\.torsoRig\\.rotation\\.x/);
+  assert.match(source,/actor\.torsoRig\.rotation\.z/);
+  assert.match(source,/actor\.torsoRig\.rotation\.x/);
 });
 
 test('smash and drop have different animation durations and power',()=>{
