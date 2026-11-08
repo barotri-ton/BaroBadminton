@@ -5,8 +5,8 @@ export function create3DRenderer(canvas) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color('#112f3d');
   const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 100);
-  camera.position.set(0, 13.5, 19.5);
-  camera.lookAt(0, 0, 0);
+  camera.position.set(0, 10.8, 15.5);
+  camera.lookAt(0, 0.1, -0.35);
   const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'low-power' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -18,7 +18,7 @@ export function create3DRenderer(canvas) {
   sunlight.position.set(-4, 12, 8);
   scene.add(sunlight);
   const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, ...extra });
-  scene.fog = new THREE.Fog('#112f3d', 24, 54);
+  scene.fog = new THREE.Fog('#112f3d', 26, 52);
   const arena = new THREE.Group();
   scene.add(arena);
   // Arena architecture: lightweight geometry, no textures or network requests.
@@ -105,9 +105,20 @@ export function create3DRenderer(canvas) {
       group.add(arm);
       arms.push(arm);
     }
+    const collar = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.09, 0.28), mat('#f8fafc'));
+    collar.position.y = 1.23;
+    group.add(collar);
+    const hair = new THREE.Mesh(new THREE.SphereGeometry(0.225, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat('#20242e'));
+    hair.position.y = 1.61;
+    group.add(hair);
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), mat('#f5d0ad'));
     head.position.y = 1.56;
     group.add(head);
+    for (const side of [-1, 1]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 6), mat('#20242e'));
+      eye.position.set(side * 0.085, 1.59, 0.195);
+      group.add(eye);
+    }
     const racket = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.035, 6, 14), mat('#e5edf5'));
     racket.position.set(0.48, 1.38, 0);
     racket.rotation.z = 0.35;
@@ -122,6 +133,10 @@ export function create3DRenderer(canvas) {
   const user = athlete('#4fb7ff');
   const opponent = athlete('#f26c79');
   opponent.group.rotation.y = Math.PI;
+  const floorRing = new THREE.Mesh(new THREE.RingGeometry(3.3, 3.38, 64), new THREE.MeshBasicMaterial({color:'#58bba1', transparent:true, opacity:0.35, side:THREE.DoubleSide}));
+  floorRing.rotation.x = -Math.PI / 2;
+  floorRing.position.y = 0.018;
+  scene.add(floorRing);
   const shuttle = new THREE.Group();
   const cork = new THREE.Mesh(new THREE.SphereGeometry(0.11, 8, 6), mat('#f4c566'));
   shuttle.add(cork);
@@ -148,7 +163,7 @@ export function create3DRenderer(canvas) {
     if (width !== lastWidth || height !== lastHeight) {
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
-      camera.fov = camera.aspect < 0.7 ? 55 : 46;
+      camera.fov = camera.aspect < 0.7 ? 42 : 39;
       camera.updateProjectionMatrix();
       lastWidth = width;
       lastHeight = height;
