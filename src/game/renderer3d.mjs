@@ -10,12 +10,23 @@ export function create3DRenderer(canvas) {
   const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'low-power' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.3;
   renderer.domElement.setAttribute('aria-hidden', 'true');
   Object.assign(renderer.domElement.style, { position: 'absolute', pointerEvents: 'none', zIndex: '1', display: 'block' });
   canvas.insertAdjacentElement('afterend', renderer.domElement);
   scene.add(new THREE.HemisphereLight(0xffffff, 0x3d6976, 2.2));
   const sunlight = new THREE.DirectionalLight(0xffffff, 1.8);
   sunlight.position.set(-4, 12, 8);
+  sunlight.castShadow = true;
+  sunlight.shadow.mapSize.set(1024, 1024);
+  sunlight.shadow.camera.left = -9;
+  sunlight.shadow.camera.right = 9;
+  sunlight.shadow.camera.top = 10;
+  sunlight.shadow.camera.bottom = -10;
+  sunlight.shadow.bias = -0.0005;
   scene.add(sunlight);
   const mat = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.85, ...extra });
   scene.fog = new THREE.Fog('#112f3d', 26, 52);
@@ -45,10 +56,16 @@ export function create3DRenderer(canvas) {
   const ground = new THREE.Mesh(new THREE.PlaneGeometry(30, 36), mat('#123d48'));
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.04;
+  ground.receiveShadow = true;
   scene.add(ground);
   const court = new THREE.Mesh(new THREE.PlaneGeometry(6.1, 13.4), mat('#23866c'));
   court.rotation.x = -Math.PI / 2;
+  court.receiveShadow = true;
   scene.add(court);
+  const border = new THREE.Mesh(new THREE.PlaneGeometry(9, 16.2), mat('#aa5643'));
+  border.rotation.x = -Math.PI / 2;
+  border.position.y = -0.022;
+  scene.add(border);
   const lineMat = new THREE.MeshBasicMaterial({ color: 0xe9fff4 });
   function line(x1, z1, x2, z2, width = 0.045) {
     const length = Math.hypot(x2 - x1, z2 - z1);
@@ -66,6 +83,13 @@ export function create3DRenderer(canvas) {
   const net = new THREE.Mesh(new THREE.PlaneGeometry(6.4, 1.55), new THREE.MeshBasicMaterial({ color: 0xc9e5e8, transparent: true, opacity: 0.34, side: THREE.DoubleSide, depthWrite: false }));
   net.position.set(0, 0.775, 0);
   scene.add(net);
+  const meshMaterial = new THREE.LineBasicMaterial({ color: '#d7f6f1', transparent: true, opacity: 0.58 });
+  const meshVertices = [];
+  for (let x = -3.15; x <= 3.16; x += 0.2) meshVertices.push(x, 0.03, 0, x, 1.5, 0);
+  for (let y = 0.08; y <= 1.5; y += 0.17) meshVertices.push(-3.18, y, 0, 3.18, y, 0);
+  const meshGeometry = new THREE.BufferGeometry();
+  meshGeometry.setAttribute('position', new THREE.Float32BufferAttribute(meshVertices, 3));
+  scene.add(new THREE.LineSegments(meshGeometry, meshMaterial));
   const tape = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.045, 0.035), lineMat);
   tape.position.set(0, 1.55, 0);
   scene.add(tape);
@@ -78,6 +102,7 @@ export function create3DRenderer(canvas) {
     const group = new THREE.Group();
     const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.26, 0.58, 4, 8), mat(color));
     body.position.y = 0.85;
+    body.castShadow = true;
     group.add(body);
     const shorts = new THREE.Mesh(new THREE.BoxGeometry(0.49, 0.25, 0.33), mat('#183c55'));
     shorts.position.y = 0.46;
@@ -88,6 +113,7 @@ export function create3DRenderer(canvas) {
       leg.position.set(side * 0.14, 0.38, 0);
       const limb = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.39, 3, 6), mat('#f1c7a4'));
       limb.position.y = -0.23;
+      limb.castShadow = true;
       leg.add(limb);
       const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.13, 0.37), mat('#f5f7fc'));
       shoe.position.set(0, -0.57, 0.09);
@@ -113,7 +139,14 @@ export function create3DRenderer(canvas) {
     group.add(hair);
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), mat('#f5d0ad'));
     head.position.y = 1.56;
+    head.castShadow = true;
     group.add(head);
+    const nose = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), mat('#dfad8f'));
+    nose.position.set(0, 1.53, 0.215);
+    group.add(nose);
+    const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.105, 0.016, 0.015), mat('#9d5b59'));
+    mouth.position.set(0, 1.46, 0.215);
+    group.add(mouth);
     for (const side of [-1, 1]) {
       const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 6), mat('#20242e'));
       eye.position.set(side * 0.085, 1.59, 0.195);
@@ -123,12 +156,26 @@ export function create3DRenderer(canvas) {
     racket.position.set(0.48, 1.38, 0);
     racket.rotation.z = 0.35;
     group.add(racket);
+    const strings = new THREE.Group();
+    const stringMat = new THREE.LineBasicMaterial({ color: '#e3f5f4', transparent: true, opacity: 0.7 });
+    const stringPoints = [];
+    for (let k = -3; k <= 3; k++) {
+      const v = k * 0.065;
+      const half = Math.sqrt(Math.max(0, 0.23 * 0.23 - v * v));
+      stringPoints.push(v, -half, 0, v, half, 0, -half, v, 0, half, v, 0);
+    }
+    const stringGeo = new THREE.BufferGeometry();
+    stringGeo.setAttribute('position', new THREE.Float32BufferAttribute(stringPoints, 3));
+    strings.add(new THREE.LineSegments(stringGeo, stringMat));
+    strings.position.copy(racket.position);
+    strings.rotation.copy(racket.rotation);
+    group.add(strings);
     const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.68, 6), mat('#d4e0ed'));
     shaft.position.set(0.3, 0.94, 0);
     shaft.rotation.z = -0.6;
     group.add(shaft);
     scene.add(group);
-    return { group, legs, arms, racket, shaft, previous: new THREE.Vector3(), stride: 0 };
+    return { group, legs, arms, racket, strings, shaft, previous: new THREE.Vector3(), stride: 0 };
   }
   const user = athlete('#4fb7ff');
   const opponent = athlete('#f26c79');
@@ -202,6 +249,7 @@ export function create3DRenderer(canvas) {
     const swingAngle = swingProgress < 1 ? Math.sin(swingProgress * Math.PI) * 1.5 : 0;
     user.arms[1].rotation.x = -swingAngle;
     user.racket.rotation.z = 0.35 - swingAngle * 0.3;
+    user.strings.rotation.z = user.racket.rotation.z;
     const focusX = (state.ball.x - 0.5) * 0.65;
     const focusZ = (state.ball.y - 0.5) * 1.2;
     const smooth = 1 - Math.exp(-frameDelta * 2.5);
