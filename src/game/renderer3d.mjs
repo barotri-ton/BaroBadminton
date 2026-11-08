@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { athletePose } from './athlete-pose.mjs';
 
 // Lightweight WebGL scene. The Canvas 2D game remains the fallback when WebGL is unavailable.
 export function create3DRenderer(canvas) {
@@ -284,9 +285,10 @@ export function create3DRenderer(canvas) {
       const moving = distance > 0.002;
       const dx = x - actor.previous.x;
       const dz = z - actor.previous.z;
-      if (moving) actor.stride += Math.min(distance, 0.2) * 12;
-      const gait = moving ? Math.sin(actor.stride) * 0.42 : 0;
-      const lateral = moving ? THREE.MathUtils.clamp(dx * 0.4, -0.2, 0.2) : 0;
+      const pose = athletePose({dx, dz, dt:frameDelta || 1/60, stride:actor.stride});
+      actor.stride = pose.stride;
+      const gait = moving ? pose.gait : 0;
+      const lateral = moving ? pose.lateral : 0;
       actor.legs[0].rotation.x = gait;
       actor.legs[1].rotation.x = -gait;
       actor.legs[0].rotation.z = THREE.MathUtils.lerp(actor.legs[0].rotation.z, lateral, 0.22);
@@ -295,8 +297,8 @@ export function create3DRenderer(canvas) {
       actor.feet[1].rotation.x = Math.min(0, gait) * 0.28;
       actor.arms[0].rotation.x = -gait * 0.5;
       actor.arms[1].rotation.x = gait * 0.5;
-      actor.group.rotation.z = THREE.MathUtils.lerp(actor.group.rotation.z, moving ? THREE.MathUtils.clamp(-dx * 0.9, -0.16, 0.16) : 0, 0.16);
-      actor.group.rotation.x = THREE.MathUtils.lerp(actor.group.rotation.x, moving ? THREE.MathUtils.clamp(dz * 0.65, -0.12, 0.12) : 0, 0.16);
+      actor.group.rotation.z = THREE.MathUtils.lerp(actor.group.rotation.z, moving ? pose.leanZ : 0, 0.16);
+      actor.group.rotation.x = THREE.MathUtils.lerp(actor.group.rotation.x, moving ? pose.leanX : 0, 0.16);
       actor.group.position.set(x, moving ? Math.abs(Math.sin(actor.stride)) * 0.045 : Math.sin(now * 0.002) * 0.009, z);
       actor.previous.set(x, 0, z);
     }
@@ -313,8 +315,9 @@ export function create3DRenderer(canvas) {
     opponent.racketRig.rotation.z = -opponentSwingAngle * 0.3;
     const duration = currentShot === 'smash' ? 330 : currentShot === 'drop' ? 540 : 430;
     const swingProgress = Math.min(1, (now - swingStart) / duration);
-    const swingAngle = swingProgress < 1 ? Math.sin(swingProgress * Math.PI) * (currentShot === 'smash' ? 2 : currentShot === 'drop' ? 0.75 : 1.5) : 0;
-    user.group.position.y += currentShot === 'smash' && swingProgress < 1 ? Math.sin(swingProgress * Math.PI) * 0.23 : 0;
+    const attackPose = athletePose({shot:currentShot,swingProgress});
+    const swingAngle = attackPose.swing;
+    user.group.position.y += attackPose.jump;
     user.legs[0].rotation.x += currentShot === 'smash' && swingProgress < 1 ? 0.18 : 0;
     const impactAge = (now - impactStart) / 380;
     impactRing.visible = impactAge >= 0 && impactAge < 1;
