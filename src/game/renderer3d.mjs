@@ -144,6 +144,10 @@ export function create3DRenderer(canvas) {
   feathers.position.y = 0.24;
   shuttle.add(feathers);
   scene.add(shuttle);
+  const landingMarker = new THREE.Mesh(new THREE.RingGeometry(0.27, 0.37, 28), new THREE.MeshBasicMaterial({ color: '#ffe08a', transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false }));
+  landingMarker.rotation.x = -Math.PI / 2;
+  landingMarker.position.y = 0.035;
+  scene.add(landingMarker);
   let disposed = false;
   let lastWidth = 0;
   let lastHeight = 0;
@@ -205,6 +209,12 @@ export function create3DRenderer(canvas) {
     lookTarget.z += (focusZ - 0.4 - lookTarget.z) * smooth;
     camera.lookAt(lookTarget);
     shuttle.position.set((state.ball.x - 0.5) * 6.1, 0.25 + state.ball.z * 2.8, (state.ball.y - 0.5) * 13.4);
+    const landing = state.landing;
+    landingMarker.visible = Boolean(landing && landing.x >= 0 && landing.x <= 1 && landing.y >= 0 && landing.y <= 1);
+    if (landingMarker.visible) {
+      landingMarker.position.set((landing.x - 0.5) * 6.1, 0.035, (landing.y - 0.5) * 13.4);
+      landingMarker.scale.setScalar(0.88 + Math.sin(now * 0.007) * 0.12);
+    }
     renderer.render(scene, camera);
   }
   function dispose() { disposed = true; renderer.dispose(); renderer.domElement.remove(); }
