@@ -231,6 +231,10 @@ export function create3DRenderer(canvas) {
       torsoRig.add(part);
       part.position.y -= torsoRig.position.y;
     }
+    // Attach the racket to the dominant forearm, so elbow flexion moves the racket too.
+    torsoRig.remove(racketRig);
+    elbows[1].add(racketRig);
+    racketRig.position.set(0, 0.33, 0);
     scene.add(group);
     return { group, torsoRig, legs, knees, feet, arms, elbows, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
   }
