@@ -13,14 +13,14 @@ export function advanceShuttle(ball, dt) {
 export function launchShuttle(ball, vx, vy, lift) {
   return { ...ball, vx, vy, z: Math.max(0.32, ball.z), vzVelocity: lift };
 }
+// Closed-form landing estimate avoids allocating hundreds of shuttle states every frame.
+// The real flight is semi-implicit Euler; this analytic estimate is for UI guidance only.
 export function predictLanding(ball, maxTime = 3, step = 1 / 60) {
-  let simulated = { ...ball };
-  let time = 0;
-  while (time < maxTime && simulated.z > 0) {
-    const dt = Math.min(step, maxTime - time, 0.1);
-    if (dt <= 0) break;
-    simulated = advanceShuttle(simulated, dt);
-    time += dt;
-  }
-  return { x: simulated.x, y: simulated.y, time };
+  if (!Number.isFinite(maxTime) || maxTime <= 0 || !Number.isFinite(step) || step <= 0) throw new RangeError('Invalid prediction interval');
+  const vz = ball.vzVelocity ?? 0;
+  const gravity = FLIGHT.gravity;
+  const discriminant = vz * vz + 2 * gravity * Math.max(0, ball.z);
+  const time = Math.min(maxTime, (vz + Math.sqrt(discriminant)) / gravity);
+  const travel = FLIGHT.drag > 0 ? -Math.expm1(-FLIGHT.drag * time) / FLIGHT.drag : time;
+  return { x: ball.x + ball.vx * travel, y: ball.y + ball.vy * travel, time };
 }
