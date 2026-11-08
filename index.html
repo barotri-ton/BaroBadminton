@@ -2,14 +2,14 @@
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no"><meta name="theme-color" content="#071b2a"><title>BaroBadminton — Chơi cầu lông</title>
 <style>*{box-sizing:border-box}body{margin:0;background:#071b2a;color:#fff;font:15px system-ui,-apple-system,sans-serif;overflow:hidden}header{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#0b2637}header strong{font-size:18px;color:#7ee6bf}button,select{font:inherit;border:0;border-radius:12px;padding:11px 14px}button{background:#18b889;color:#062c25;font-weight:750;touch-action:manipulation}select{background:#15394c;color:white;max-width:100%}#game{display:block;width:100vw;height:calc(100dvh - 188px);min-height:240px;touch-action:none}#score{text-align:center;font-weight:800;font-size:21px;letter-spacing:1px}#status{text-align:center;font-size:13px;color:#b7d7df;min-height:20px}#controls{z-index:4;position:absolute;bottom:0;width:100%;padding:10px 12px max(12px,env(safe-area-inset-bottom));background:#0b2637;display:flex;align-items:center;justify-content:space-between;gap:10px}.pad{display:grid;grid-template-columns:repeat(3,44px);grid-template-rows:repeat(2,42px);gap:4px}.pad button{padding:0;background:#24495b;color:white}.pad button[data-d=up]{grid-column:2}.pad button[data-d=left]{grid-column:1;grid-row:2}.pad button[data-d=down]{grid-column:2;grid-row:2}.pad button[data-d=right]{grid-column:3;grid-row:2}#joystick{width:112px;height:112px;border:2px solid #9be7d955;border-radius:50%;background:radial-gradient(circle,#285e65bb,#102f3b99);position:relative;touch-action:none;flex-shrink:0;box-shadow:inset 0 0 22px #0007}#stick{width:50px;height:50px;border-radius:50%;background:linear-gradient(145deg,#a7fff0,#20a98d);box-shadow:0 4px 18px #0009;position:absolute;top:29px;left:29px;pointer-events:none;transition:transform .05s linear}@keyframes hitFeedback{0%{transform:scale(1)}35%{transform:scale(1.12);filter:brightness(1.45)}100%{transform:scale(1)}}#hit.hit-flash{animation:hitFeedback .22s ease-out}#hit{width:90px;height:78px;background:#ffcb58;font-size:15px}.shot-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end;max-width:66vw}.shot-actions button{background:#284f62;color:#f5ffff;padding:10px 8px;font-size:12px;min-height:44px}.shot-actions button.selected{background:#ffcb58;color:#172d30}.pad button:active,#hit:active{transform:scale(.95);filter:brightness(1.15)}#overlay{overflow-y:auto;z-index:5;position:absolute;inset:56px 0 130px;display:grid;place-items:center;background:#071b2add;padding:20px}#panel{background:#123246;border:1px solid #326076;border-radius:22px;padding:22px;max-width:390px;width:100%;display:grid;gap:12px;box-shadow:0 20px 60px #0008}h1{margin:0;font-size:24px}small{color:#b6d1db}#panel label{display:grid;gap:5px}#panel input{width:100%}#hint{font-size:12px;color:#c1d8df;text-align:center}@media(max-width:390px){#joystick{width:94px;height:94px}#stick{top:21px;left:21px}#hit{height:60px;width:82px}.shot-actions{gap:3px}.shot-actions button{font-size:11px;padding:8px 6px;min-height:36px}#score{font-size:17px}header{height:50px}#game{height:calc(100dvh - 175px)}}@media(min-width:700px){#game{height:calc(100dvh - 175px)}#controls{justify-content:center;gap:80px}}</style></head>
 <body><header><strong>🏸 BaroBadminton</strong><button id="menu">Cài đặt</button></header><div id="score">Bạn 0 — 0 Máy</div><div id="status">Chọn thiết bị và bắt đầu trận đấu</div><canvas id="game"></canvas><div id="controls"><div id="joystick" aria-label="Cần điều khiển di chuyển" role="group"><div id="stick"></div></div><div class="shot-actions"><button id="clear" class="selected" data-shot="clear">Phông</button><button id="drop" data-shot="drop">Bỏ nhỏ</button><button id="smash" data-shot="smash">Đập</button><button id="hit">ĐÁNH CẦU</button></div></div>
-<div id="overlay"><div id="panel"><h1>🏸 Vào sân thi đấu</h1><small>Chơi trực tiếp trên điện thoại • Di chuyển bằng cần điều khiển • Vuốt nút ĐÁNH CẦU lên để đập, xuống để phông, ngang để bỏ nhỏ</small><label>Vợt cầu lông<select id="racket"><option>Yonex Astrox 100 ZZ</option><option>Yonex Nanoflare 1000 Z</option><option>Victor Thruster Ryuga II</option><option>Li-Ning Axforce 90</option></select></label><label>Độ khó<select id="difficulty"><option value="easy">Dễ — Luyện tập</option><option value="normal" selected>Trung bình</option><option value="hard">Khó</option></select></label><label>Loại cầu<select id="shuttle"><option>Cầu lông vũ</option><option>Cầu nhựa</option></select></label><label>Độ căng dây: <span id="tensionLabel">11 kg</span><input id="tension" type="range" min="9" max="13" step=".5" value="11"></label><button id="start">Bắt đầu chơi</button><small>Thông số thiết bị là lựa chọn mô phỏng, chưa phải mô hình vật lý chính xác của nhà sản xuất.</small></div></div>
+<div id="overlay"><div id="panel"><h1>🏸 Vào sân thi đấu</h1><small>Chơi trực tiếp trên điện thoại • Di chuyển bằng cần điều khiển • Vuốt nút ĐÁNH CẦU lên để đập, xuống để phông, ngang để bỏ nhỏ</small><label>Vợt cầu lông<select id="racket"><option>Yonex Astrox 100 ZZ</option><option>Yonex Nanoflare 1000 Z</option><option>Victor Thruster Ryuga II</option><option>Li-Ning Axforce 90</option></select></label><label>Chế độ chơi<select id="mode"><option value="solo">1 người — Đấu với máy</option><option value="local">2 người — Cùng bàn phím</option></select></label><label>Độ khó<select id="difficulty"><option value="easy">Dễ — Luyện tập</option><option value="normal" selected>Trung bình</option><option value="hard">Khó</option></select></label><label>Loại cầu<select id="shuttle"><option>Cầu lông vũ</option><option>Cầu nhựa</option></select></label><label>Độ căng dây: <span id="tensionLabel">11 kg</span><input id="tension" type="range" min="9" max="13" step=".5" value="11"></label><button id="start">Bắt đầu chơi</button><small id="modeHelp">1 người: WASD / phím mũi tên hoặc joystick, Space để đánh. 2 người: P1 WASD + Space; P2 phím mũi tên + Enter. Trên điện thoại nên chọn đấu với máy.</small><small>Thông số thiết bị là lựa chọn mô phỏng, chưa phải mô hình vật lý chính xác của nhà sản xuất.</small></div></div>
 <script type="module">
 import { newMatch, awardRally, scoreLabel } from './src/game/rules.mjs';
 import { netFaultWinner, sidelineFaultWinner, baselineFaultWinner, canHumanHit, canAiHit } from './src/game/rally.mjs';
 import { predictIntercept, chooseAiReturn } from './src/game/ai.mjs';
 import { advanceShuttle, launchShuttle, predictLanding, FLIGHT } from './src/game/flight.mjs';
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),overlay=document.getElementById('overlay'),score=document.getElementById('score'),status=document.getElementById('status');
-let renderer3d=null;
+let renderer3d=null,localMultiplayer=false;
 let shotType='clear',rallyHits=0,swingPulse=0,aiSwingPulse=0,joystickX=0,joystickY=0,swipeStart=null;
 let w=0,h=0,playing=false,paused=false,player={x:.5,y:.83},bot={x:.5,y:.17},ball={x:.5,y:.5,z:.18,vx:.13,vy:.45,vz:.45},match=newMatch(),last=0,cooldown=0,keys=new Set(),pointer=null;
 function resize(){const d=Math.min(devicePixelRatio||1,2);w=canvas.clientWidth;h=canvas.clientHeight;canvas.width=Math.round(w*d);canvas.height=Math.round(h*d);ctx.setTransform(d,0,0,d,0,0)}addEventListener('resize',resize);resize();
@@ -22,10 +22,10 @@ function point(side){
   if(!playing||paused)return;
   const previousGames=[...match.games];
   match=awardRally(match,side);
-  score.textContent=scoreLabel(match);
+  score.textContent=scoreLabel(match,localMultiplayer);
   if(match.winner!==null){
     playing=false;
-    status.textContent=match.winner===0?'Bạn đã chiến thắng trận đấu!':'Máy đã chiến thắng trận đấu!';
+    status.textContent=match.winner===0?'Người chơi 1 chiến thắng!':localMultiplayer?'Người chơi 2 chiến thắng!':'Máy đã chiến thắng trận đấu!';
     overlay.style.display='grid';
     document.getElementById('start').textContent='Đấu lại';
     return;
@@ -35,17 +35,19 @@ function point(side){
   } else status.textContent=side===0?'Bạn ghi điểm!':'Máy ghi điểm!';
   reset(side===1);
 }
-function swing(){
+function swing(side=0){
   if(!playing||paused||cooldown>0)return;
-  if(canHumanHit(ball,player,cooldown)){
-    swingPulse++;
+  const striker=side===0?player:bot;
+  const canStrike=side===0?canHumanHit(ball,striker,cooldown):localMultiplayer&&canAiHit(ball,striker,.17);
+  if(canStrike){
+    if(side===0)swingPulse++;else aiSwingPulse++;
     const tension=Number(document.getElementById('tension').value);
     const shots={clear:{speed:.39,height:1.1,name:'Phông cầu'},drop:{speed:.21,height:.46,name:'Bỏ nhỏ'},smash:{speed:.65,height:.32,name:'Đập cầu'}};
     const shot=shots[shotType];
-    ball=launchShuttle(ball,clamp((.5-ball.x)*.22+(Math.random()-.5)*.09,-.22,.22),-shot.speed*(1+(tension-11)*.012),shot.height);
+    ball=launchShuttle(ball,clamp((.5-ball.x)*.22+(Math.random()-.5)*.09,-.22,.22),(side===0?-1:1)*shot.speed*(1+(tension-11)*.012),shot.height);
     cooldown=.24;
     rallyHits++;
-    status.textContent=shot.name+' thành công!';
+    status.textContent=(side===0?'Người chơi 1: ':'Người chơi 2: ')+shot.name+' thành công!';
     hitButton.classList.remove('hit-flash');
     void hitButton.offsetWidth;
     hitButton.classList.add('hit-flash');
@@ -54,8 +56,8 @@ function swing(){
 function update(dt){
   if(!playing||paused)return;
   cooldown=Math.max(0,cooldown-dt);
-  let mx=Number(keys.has('right'))-Number(keys.has('left'))+joystickX;
-  let my=Number(keys.has('down'))-Number(keys.has('up'))+joystickY;
+  let mx=Number(keys.has('d'))-Number(keys.has('a'))+joystickX+(localMultiplayer?0:Number(keys.has('right'))-Number(keys.has('left')));
+  let my=Number(keys.has('s'))-Number(keys.has('w'))+joystickY+(localMultiplayer?0:Number(keys.has('down'))-Number(keys.has('up')));
   if(pointer){mx+=pointer.x-player.x;my+=pointer.y-player.y}
   const magnitude=Math.hypot(mx,my);
   if(magnitude>1){mx/=magnitude;my/=magnitude}
@@ -64,15 +66,24 @@ function update(dt){
   const difficulty=document.getElementById('difficulty').value;
   const aiSpeed={easy:.23,normal:.39,hard:.57}[difficulty];
   const aiReach={easy:.13,normal:.17,hard:.20}[difficulty];
-  const intercept=predictIntercept(ball,clamp(ball.y-.06,.07,.42));
-  const targetX=ball.vy<0?intercept.x:.5;
-  const targetY=ball.vy<0?intercept.y:.20;
-  bot.x+=clamp(targetX-bot.x,-dt*aiSpeed,dt*aiSpeed);
-  bot.y=clamp(bot.y+clamp(targetY-bot.y,-dt*aiSpeed,dt*aiSpeed),.06,.43);
+  if(localMultiplayer){
+    let bx=Number(keys.has('right'))-Number(keys.has('left'));
+    let by=Number(keys.has('down'))-Number(keys.has('up'));
+    const bm=Math.hypot(bx,by);
+    if(bm>1){bx/=bm;by/=bm}
+    bot.x=clamp(bot.x+bx*dt*.88,.05,.95);
+    bot.y=clamp(bot.y+by*dt*.88,.04,.46);
+  }else{
+    const intercept=predictIntercept(ball,clamp(ball.y-.06,.07,.42));
+    const targetX=ball.vy<0?intercept.x:.5;
+    const targetY=ball.vy<0?intercept.y:.20;
+    bot.x+=clamp(targetX-bot.x,-dt*aiSpeed,dt*aiSpeed);
+    bot.y=clamp(bot.y+clamp(targetY-bot.y,-dt*aiSpeed,dt*aiSpeed),.06,.43);
+  }
   const previousY=ball.y;
   ball=advanceShuttle(ball,dt);
   if((previousY-.5)*(ball.y-.5)<=0&&ball.z<FLIGHT.netHeight){status.textContent='Cầu chạm lưới!';point(netFaultWinner(ball.vy));return}
-  if(canAiHit(ball,bot,aiReach)){
+  if(!localMultiplayer&&canAiHit(ball,bot,aiReach)){
     const target=chooseAiReturn(player,difficulty);
     ball=launchShuttle(ball,clamp((target.x-ball.x)*.48,-.3,.3),.46+(difficulty==='hard'?.08:0),.9);
     rallyHits++;
@@ -93,7 +104,7 @@ for(const type of ['pointerup','pointercancel','lostpointercapture'])joystick.ad
 document.querySelectorAll('[data-shot]').forEach(button=>button.addEventListener('pointerdown',event=>{event.preventDefault();shotType=button.dataset.shot;document.querySelectorAll('[data-shot]').forEach(b=>b.classList.toggle('selected',b===button))}));const hitButton=document.getElementById('hit');
 hitButton.addEventListener('pointerdown',e=>{e.preventDefault();swipeStart={x:e.clientX,y:e.clientY};hitButton.setPointerCapture(e.pointerId)});
 hitButton.addEventListener('pointerup',e=>{e.preventDefault();if(!swipeStart)return;const dx=e.clientX-swipeStart.x,dy=e.clientY-swipeStart.y;swipeStart=null;if(Math.hypot(dx,dy)>18){shotType=dy< -16?'smash':dy>16?'clear':'drop';document.querySelectorAll('[data-shot]').forEach(b=>b.classList.toggle('selected',b.dataset.shot===shotType))}swing()});
-hitButton.addEventListener('pointercancel',()=>{swipeStart=null});canvas.addEventListener('pointerdown',e=>{let r=canvas.getBoundingClientRect();pointer={x:clamp((e.clientX-r.left)/w-.14,0,.72)/.72,y:clamp(((e.clientY-r.top)/h-.08)/.84,.56,.96)};canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(pointer){let r=canvas.getBoundingClientRect();pointer={x:clamp(((e.clientX-r.left)/w-.14)/.72,0,1),y:clamp(((e.clientY-r.top)/h-.08)/.84,.56,.96)}}});['pointerup','pointercancel'].forEach(ev=>canvas.addEventListener(ev,()=>pointer=null));document.addEventListener('keydown',e=>{const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};if(m[e.key]){keys.add(m[e.key]);e.preventDefault()}if(e.code==='Space'){swing();e.preventDefault()}});document.addEventListener('keyup',e=>{const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right'};keys.delete(m[e.key])});document.getElementById('tension').addEventListener('input',e=>document.getElementById('tensionLabel').textContent=e.target.value+' kg');document.getElementById('start').onclick=()=>{if(playing&&paused&&match.winner===null){paused=false;overlay.style.display='none';status.textContent='Tiếp tục trận đấu';return;}paused=false;keys.clear();pointer=null;releaseStick();match=newMatch();score.textContent=scoreLabel(match);player={x:.5,y:.83};bot={x:.5,y:.17};reset();playing=true;overlay.style.display='none';status.textContent='Di chuyển và đánh cầu khi cầu đến gần!'};document.getElementById('menu').onclick=()=>{paused=true;keys.clear();pointer=null;releaseStick();overlay.style.display='grid';document.getElementById('start').textContent='Tiếp tục trận đấu'};
+hitButton.addEventListener('pointercancel',()=>{swipeStart=null});canvas.addEventListener('pointerdown',e=>{let r=canvas.getBoundingClientRect();pointer={x:clamp((e.clientX-r.left)/w-.14,0,.72)/.72,y:clamp(((e.clientY-r.top)/h-.08)/.84,.56,.96)};canvas.setPointerCapture(e.pointerId)});canvas.addEventListener('pointermove',e=>{if(pointer){let r=canvas.getBoundingClientRect();pointer={x:clamp(((e.clientX-r.left)/w-.14)/.72,0,1),y:clamp(((e.clientY-r.top)/h-.08)/.84,.56,.96)}}});['pointerup','pointercancel'].forEach(ev=>canvas.addEventListener(ev,()=>pointer=null));document.addEventListener('keydown',e=>{const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'w',s:'s',a:'a',d:'d'};if(m[e.key]){keys.add(m[e.key]);e.preventDefault()}if(e.code==='Space'){swing(0);e.preventDefault()}if(e.code==='Enter'&&localMultiplayer){swing(1);e.preventDefault()}});document.addEventListener('keyup',e=>{const m={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'w',s:'s',a:'a',d:'d'};keys.delete(m[e.key])});document.getElementById('tension').addEventListener('input',e=>document.getElementById('tensionLabel').textContent=e.target.value+' kg');document.getElementById('mode').addEventListener('change',e=>{document.getElementById('modeHelp').textContent=e.target.value==='local'?'2 người trên máy tính: P1 WASD + Space; P2 phím mũi tên + Enter.':'1 người: joystick / WASD / phím mũi tên và nút đánh cầu / Space.'});document.getElementById('start').onclick=()=>{if(playing&&paused&&match.winner===null){paused=false;overlay.style.display='none';status.textContent='Tiếp tục trận đấu';return;}paused=false;keys.clear();pointer=null;releaseStick();localMultiplayer=document.getElementById('mode').value==='local';match=newMatch();score.textContent=scoreLabel(match,localMultiplayer);player={x:.5,y:.83};bot={x:.5,y:.17};reset();playing=true;overlay.style.display='none';status.textContent='Di chuyển và đánh cầu khi cầu đến gần!'};document.getElementById('menu').onclick=()=>{paused=true;keys.clear();pointer=null;releaseStick();overlay.style.display='grid';document.getElementById('start').textContent='Tiếp tục trận đấu'};
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing){paused=true;keys.clear();pointer=null;overlay.style.display='grid';document.getElementById('start').textContent='Tiếp tục trận đấu';status.textContent='Trận đấu đã tạm dừng'}});
 window.addEventListener('blur',()=>{keys.clear();pointer=null;releaseStick()});
 import('./render3d.js').then(({create3DRenderer})=>{try{renderer3d=create3DRenderer(canvas);status.textContent=playing?'Sân cầu lông 3D đã sẵn sàng':'Sân 3D đã sẵn sàng — Bắt đầu trận đấu';}catch(error){console.warn('Không thể khởi tạo 3D, sử dụng chế độ 2D.',error)}}).catch(error=>console.warn('Không thể tải 3D, sử dụng chế độ 2D.',error));

@@ -14,6 +14,6 @@ export function awardRally(match, winner) {
   games[winner]++;
   return { points: [0, 0], games, server: winner, lastGameWinner: winner, winner: games[winner] >= 2 ? winner : null };
 }
-export function scoreLabel(match) {
-  return `Bạn ${match.points[0]} — ${match.points[1]} Máy · Hiệp ${match.games[0]}–${match.games[1]}`;
+export function scoreLabel(match, localMultiplayer = false) {
+  return `${localMultiplayer ? 'P1' : 'Bạn'} ${match.points[0]} — ${match.points[1]} ${localMultiplayer ? 'P2' : 'Máy'} · Hiệp ${match.games[0]}–${match.games[1]}`;
 }
