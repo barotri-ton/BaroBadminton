@@ -12,8 +12,8 @@ test('both players receive racket swing animation',()=>{
   assert.match(source,/opponent\.racketRig\.rotation\.x/);
 });
 test('athletes lean during movement and recover at rest',()=>{
-  assert.match(source,/actor\.group\.rotation\.z/);
-  assert.match(source,/actor\.group\.rotation\.x/);
+  assert.match(source,/actor\\.torsoRig\\.rotation\\.z/);
+  assert.match(source,/actor\\.torsoRig\\.rotation\\.x/);
 });
 
 test('smash and drop have different animation durations and power',()=>{
@@ -39,4 +39,11 @@ test('stylized athlete has footwork and idle breathing',()=>{
   assert.match(source,/actor\.feet\[0\]\.rotation\.x/);
   assert.match(source,/actor\.legs\[0\]\.rotation\.z/);
   assert.match(source,/Math\.sin\(now \* 0\.002\)/);
+});
+
+test('waist pivot rig separates upper body from footwork',()=>{
+  assert.match(source,/torsoRig\.position\.y = 0\.75/);
+  assert.match(source,/torsoRig\.add\(part\)/);
+  assert.match(source,/part\.position\.y -= torsoRig\.position\.y/);
+  assert.match(source,/torsoRig, legs, feet, arms/);
 });
