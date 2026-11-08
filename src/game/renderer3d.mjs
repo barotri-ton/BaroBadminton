@@ -155,7 +155,11 @@ export function create3DRenderer(canvas) {
     const racket = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.035, 6, 14), mat('#e5edf5'));
     racket.position.set(0.48, 1.38, 0);
     racket.rotation.z = 0.35;
-    group.add(racket);
+    const racketRig = new THREE.Group();
+    racketRig.position.set(0.32, 1.04, 0);
+    group.add(racketRig);
+    racketRig.add(racket);
+    racket.position.sub(racketRig.position);
     const strings = new THREE.Group();
     const stringMat = new THREE.LineBasicMaterial({ color: '#e3f5f4', transparent: true, opacity: 0.7 });
     const stringPoints = [];
@@ -169,13 +173,15 @@ export function create3DRenderer(canvas) {
     strings.add(new THREE.LineSegments(stringGeo, stringMat));
     strings.position.copy(racket.position);
     strings.rotation.copy(racket.rotation);
-    group.add(strings);
+    racketRig.add(strings);
+    strings.position.sub(racketRig.position);
     const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.68, 6), mat('#d4e0ed'));
     shaft.position.set(0.3, 0.94, 0);
     shaft.rotation.z = -0.6;
-    group.add(shaft);
+    racketRig.add(shaft);
+    shaft.position.sub(racketRig.position);
     scene.add(group);
-    return { group, legs, arms, racket, strings, shaft, previous: new THREE.Vector3(), stride: 0 };
+    return { group, legs, arms, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
   }
   const user = athlete('#4fb7ff');
   const opponent = athlete('#f26c79');
@@ -202,6 +208,8 @@ export function create3DRenderer(canvas) {
   const lookTarget = new THREE.Vector3(0, 0.4, -0.4);
   let lastSwingPulse = 0;
   let swingStart = -1000;
+  let lastOpponentDirection = 0;
+  let opponentSwingStart = -1000;
   function render(state) {
     if (disposed) return;
     const rect = canvas.getBoundingClientRect();
@@ -234,22 +242,35 @@ export function create3DRenderer(canvas) {
       const z = (position.y - 0.5) * 13.4;
       const distance = Math.hypot(x - actor.previous.x, z - actor.previous.z);
       const moving = distance > 0.002;
+      const dx = x - actor.previous.x;
+      const dz = z - actor.previous.z;
       if (moving) actor.stride += Math.min(distance, 0.2) * 12;
       const gait = moving ? Math.sin(actor.stride) * 0.42 : 0;
       actor.legs[0].rotation.x = gait;
       actor.legs[1].rotation.x = -gait;
       actor.arms[0].rotation.x = -gait * 0.5;
       actor.arms[1].rotation.x = gait * 0.5;
+      actor.group.rotation.z = THREE.MathUtils.lerp(actor.group.rotation.z, moving ? THREE.MathUtils.clamp(-dx * 0.9, -0.16, 0.16) : 0, 0.16);
+      actor.group.rotation.x = THREE.MathUtils.lerp(actor.group.rotation.x, moving ? THREE.MathUtils.clamp(dz * 0.65, -0.12, 0.12) : 0, 0.16);
       actor.group.position.set(x, moving ? Math.abs(Math.sin(actor.stride)) * 0.045 : 0, z);
       actor.previous.set(x, 0, z);
     }
     animateAthlete(user, state.player);
     animateAthlete(opponent, state.bot);
+    if (state.ball.vy > 0 && lastOpponentDirection < 0 && state.ball.y < 0.48) opponentSwingStart = now;
+    lastOpponentDirection = state.ball.vy;
+    const opponentSwingProgress = Math.min(1, (now - opponentSwingStart) / 440);
+    const opponentSwingAngle = opponentSwingProgress < 1 ? Math.sin(opponentSwingProgress * Math.PI) : 0;
+    opponent.arms[1].rotation.x = -opponentSwingAngle * 1.4;
+    opponent.racketRig.rotation.x = -opponentSwingAngle * 1.05;
+    opponent.racketRig.rotation.z = -opponentSwingAngle * 0.3;
     const swingProgress = Math.min(1, (now - swingStart) / 420);
     const swingAngle = swingProgress < 1 ? Math.sin(swingProgress * Math.PI) * 1.5 : 0;
     user.arms[1].rotation.x = -swingAngle;
     user.racket.rotation.z = 0.35 - swingAngle * 0.3;
     user.strings.rotation.z = user.racket.rotation.z;
+    user.racketRig.rotation.x = -swingAngle * 0.72;
+    user.racketRig.rotation.z = -swingAngle * 0.28;
     const focusX = (state.ball.x - 0.5) * 0.65;
     const focusZ = (state.ball.y - 0.5) * 1.2;
     const smooth = 1 - Math.exp(-frameDelta * 2.5);
