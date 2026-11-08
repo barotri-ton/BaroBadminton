@@ -20,7 +20,8 @@ export function predictLanding(ball, maxTime = 3, step = 1 / 60) {
   const vz = ball.vzVelocity ?? 0;
   const gravity = FLIGHT.gravity;
   const discriminant = vz * vz + 2 * gravity * Math.max(0, ball.z);
-  const time = Math.min(maxTime, (vz + Math.sqrt(discriminant)) / gravity);
+  // A grounded, descending shuttle must not predict a negative landing time.
+  const time = Math.max(0, Math.min(maxTime, (vz + Math.sqrt(discriminant)) / gravity));
   const travel = FLIGHT.drag > 0 ? -Math.expm1(-FLIGHT.drag * time) / FLIGHT.drag : time;
   return { x: ball.x + ball.vx * travel, y: ball.y + ball.vy * travel, time };
 }

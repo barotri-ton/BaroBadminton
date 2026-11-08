@@ -10,3 +10,15 @@ test('invalid frame durations are rejected',()=>assert.throws(()=>advanceShuttle
 test('stationary shuttle landing time follows gravity',()=>{const p=predictLanding({x:.5,y:.5,z:.825,vx:0,vy:0,vzVelocity:0});assert.ok(Math.abs(p.time-1)<.001);assert.equal(p.x,.5)});
 test('prediction preserves launch direction and drag',()=>{const p=predictLanding({x:.5,y:.5,z:.825,vx:.3,vy:-.4,vzVelocity:0});assert.ok(p.x>.5&&p.x<.8);assert.ok(p.y<.5&&p.y>.1)});
 test('prediction rejects invalid intervals',()=>assert.throws(()=>predictLanding({x:0,y:0,z:1,vx:0,vy:0},0),RangeError));
+
+test('grounded descending shuttle predicts immediate landing without reversing travel',()=>{
+  const p=predictLanding({x:.4,y:.6,z:-.02,vx:.3,vy:-.4,vzVelocity:-1});
+  assert.equal(p.time,0);
+  assert.equal(p.x,.4);
+  assert.equal(p.y,.6);
+});
+test('grounded shuttle with zero height and downward velocity lands immediately',()=>{
+  const p=predictLanding({x:.2,y:.8,z:0,vx:0,vy:.4,vzVelocity:-.3});
+  assert.equal(p.time,0);
+  assert.equal(p.y,.8);
+});
