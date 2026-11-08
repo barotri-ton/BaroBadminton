@@ -197,6 +197,19 @@ export function create3DRenderer(canvas) {
   feathers.position.y = 0.24;
   shuttle.add(feathers);
   scene.add(shuttle);
+  const impactRing = new THREE.Mesh(new THREE.RingGeometry(0.16, 0.23, 24), new THREE.MeshBasicMaterial({ color: '#fff2a5', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+  impactRing.rotation.x = -Math.PI / 2;
+  impactRing.visible = false;
+  scene.add(impactRing);
+  const shuttleTrail = [];
+  const trailMaterial = new THREE.MeshBasicMaterial({ color: '#f6fff4', transparent: true, depthWrite: false });
+  for (let i = 0; i < 5; i++) {
+    const ghost = new THREE.Mesh(new THREE.SphereGeometry(0.045 - i * 0.006, 6, 4), trailMaterial.clone());
+    ghost.material.opacity = 0.32 - i * 0.052;
+    ghost.visible = false;
+    scene.add(ghost);
+    shuttleTrail.push(ghost);
+  }
   const landingMarker = new THREE.Mesh(new THREE.RingGeometry(0.27, 0.37, 28), new THREE.MeshBasicMaterial({ color: '#ffe08a', transparent: true, opacity: 0.72, side: THREE.DoubleSide, depthWrite: false }));
   landingMarker.rotation.x = -Math.PI / 2;
   landingMarker.position.y = 0.035;
@@ -208,6 +221,9 @@ export function create3DRenderer(canvas) {
   const lookTarget = new THREE.Vector3(0, 0.4, -0.4);
   let lastSwingPulse = 0;
   let swingStart = -1000;
+  let currentShot = 'clear';
+  let impactPosition = new THREE.Vector3();
+  let impactStart = -1000;
   let lastOpponentDirection = 0;
   let opponentSwingStart = -1000;
   function render(state) {
@@ -236,6 +252,9 @@ export function create3DRenderer(canvas) {
     if (state.swingPulse !== lastSwingPulse) {
       lastSwingPulse = state.swingPulse;
       swingStart = now;
+      currentShot = state.shotType || 'clear';
+      impactStart = now;
+      impactPosition.set((state.ball.x - .5) * 6.1, 0.06, (state.ball.y - .5) * 13.4);
     }
     function animateAthlete(actor, position) {
       const x = (position.x - 0.5) * 6.1;
@@ -264,8 +283,18 @@ export function create3DRenderer(canvas) {
     opponent.arms[1].rotation.x = -opponentSwingAngle * 1.4;
     opponent.racketRig.rotation.x = -opponentSwingAngle * 1.05;
     opponent.racketRig.rotation.z = -opponentSwingAngle * 0.3;
-    const swingProgress = Math.min(1, (now - swingStart) / 420);
-    const swingAngle = swingProgress < 1 ? Math.sin(swingProgress * Math.PI) * 1.5 : 0;
+    const duration = currentShot === 'smash' ? 330 : currentShot === 'drop' ? 540 : 430;
+    const swingProgress = Math.min(1, (now - swingStart) / duration);
+    const swingAngle = swingProgress < 1 ? Math.sin(swingProgress * Math.PI) * (currentShot === 'smash' ? 2 : currentShot === 'drop' ? 0.75 : 1.5) : 0;
+    user.group.position.y += currentShot === 'smash' && swingProgress < 1 ? Math.sin(swingProgress * Math.PI) * 0.23 : 0;
+    user.legs[0].rotation.x += currentShot === 'smash' && swingProgress < 1 ? 0.18 : 0;
+    const impactAge = (now - impactStart) / 380;
+    impactRing.visible = impactAge >= 0 && impactAge < 1;
+    if (impactRing.visible) {
+      impactRing.position.copy(impactPosition);
+      impactRing.scale.setScalar(0.7 + impactAge * 3.2);
+      impactRing.material.opacity = (1 - impactAge) * 0.75;
+    }
     user.arms[1].rotation.x = -swingAngle;
     user.racket.rotation.z = 0.35 - swingAngle * 0.3;
     user.strings.rotation.z = user.racket.rotation.z;
@@ -278,6 +307,12 @@ export function create3DRenderer(canvas) {
     lookTarget.z += (focusZ - 0.4 - lookTarget.z) * smooth;
     camera.lookAt(lookTarget);
     shuttle.position.set((state.ball.x - 0.5) * 6.1, 0.25 + state.ball.z * 2.8, (state.ball.y - 0.5) * 13.4);
+    const trailLength = Math.hypot(state.ball.vx, state.ball.vy);
+    for (let i = 0; i < shuttleTrail.length; i++) {
+      const ghost = shuttleTrail[i];
+      ghost.visible = trailLength > 0.35 && state.ball.z > 0;
+      ghost.position.set(shuttle.position.x - state.ball.vx * (i + 1) * 0.26 * 6.1, shuttle.position.y - (state.ball.vzVelocity || 0) * (i + 1) * 0.09, shuttle.position.z - state.ball.vy * (i + 1) * 0.26 * 13.4);
+    }
     const landing = state.landing;
     landingMarker.visible = Boolean(landing && landing.x >= 0 && landing.x <= 1 && landing.y >= 0 && landing.y <= 1);
     if (landingMarker.visible) {
