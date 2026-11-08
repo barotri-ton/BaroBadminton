@@ -6,6 +6,7 @@
 <script type="module">
 import { newMatch, awardRally, scoreLabel } from './src/game/rules.mjs';
 import { netFaultWinner, sidelineFaultWinner, baselineFaultWinner, canHumanHit, canAiHit } from './src/game/rally.mjs';
+import { predictIntercept, chooseAiReturn, estimateLanding } from './src/game/ai.mjs';
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),overlay=document.getElementById('overlay'),score=document.getElementById('score'),status=document.getElementById('status');
 let renderer3d=null;
 let shotType='clear',rallyHits=0,swingPulse=0,joystickX=0,joystickY=0,swipeStart=null;
@@ -62,8 +63,9 @@ function update(dt){
   const difficulty=document.getElementById('difficulty').value;
   const aiSpeed={easy:.23,normal:.39,hard:.57}[difficulty];
   const aiReach={easy:.13,normal:.17,hard:.20}[difficulty];
-  const targetX=ball.vy<0?ball.x:.5;
-  const targetY=ball.vy<0?clamp(ball.y-.06,.07,.42):.20;
+  const intercept=predictIntercept(ball,clamp(ball.y-.06,.07,.42));
+  const targetX=ball.vy<0?intercept.x:.5;
+  const targetY=ball.vy<0?intercept.y:.20;
   bot.x+=clamp(targetX-bot.x,-dt*aiSpeed,dt*aiSpeed);
   bot.y=clamp(bot.y+clamp(targetY-bot.y,-dt*aiSpeed,dt*aiSpeed),.06,.43);
   const previousY=ball.y;
@@ -73,7 +75,8 @@ function update(dt){
   if((previousY-.5)*(ball.y-.5)<=0&&ball.z<.12){status.textContent='Cầu chạm lưới!';point(netFaultWinner(ball.vy));return}
   if(canAiHit(ball,bot,aiReach)){
     ball.vy=.29+(difficulty==='hard'?.12:0);
-    ball.vx=clamp((player.x-ball.x)*.25+(Math.random()-.5)*.18,-.25,.25);
+    const target=chooseAiReturn(player,difficulty);
+    ball.vx=clamp((target.x-ball.x)*.48,-.3,.3);
     ball.vz=.85;
     rallyHits++;
     status.textContent='Máy trả cầu!';
@@ -81,7 +84,7 @@ function update(dt){
   if(ball.x<0||ball.x>1){status.textContent='Cầu ngoài sân!';point(sidelineFaultWinner(ball.vy))}
   else if(ball.y>.99||ball.y<.01){status.textContent='Cầu ngoài sân!';point(baselineFaultWinner(ball.y))}
 }
-function frame(t){let dt=Math.min((t-last)/1000||0,.04);last=t;update(dt);if(renderer3d){renderer3d.render({player,bot,ball,swingPulse});}else{draw();}requestAnimationFrame(frame)}requestAnimationFrame(frame);
+function frame(t){let dt=Math.min((t-last)/1000||0,.04);last=t;update(dt);if(renderer3d){renderer3d.render({player,bot,ball,swingPulse,landing:estimateLanding(ball)});}else{draw();}requestAnimationFrame(frame)}requestAnimationFrame(frame);
 const joystick=document.getElementById('joystick'),stick=document.getElementById('stick');
 function moveStick(event){const rect=joystick.getBoundingClientRect(),radius=rect.width/2;let x=(event.clientX-rect.left-radius)/(radius*.64),y=(event.clientY-rect.top-radius)/(radius*.64);const length=Math.hypot(x,y);if(length>1){x/=length;y/=length}joystickX=x;joystickY=y;stick.style.transform='translate('+x*radius*.55+'px,'+y*radius*.55+'px)'}
 function releaseStick(){joystickX=0;joystickY=0;stick.style.transform='translate(0,0)'}
