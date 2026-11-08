@@ -15,3 +15,13 @@ test('athletes lean during movement and recover at rest',()=>{
   assert.match(source,/actor\.group\.rotation\.z/);
   assert.match(source,/actor\.group\.rotation\.x/);
 });
+
+test('smash and drop have different animation durations and power',()=>{
+  assert.match(source,/currentShot === 'smash' \? 330/);
+  assert.match(source,/currentShot === 'drop' \? 540/);
+  assert.match(source,/currentShot === 'smash' \? 2/);
+});
+test('impact ring and shuttle trail are included',()=>{
+  assert.match(source,/impactRing\.visible/);
+  assert.match(source,/shuttleTrail\.push/);
+});
