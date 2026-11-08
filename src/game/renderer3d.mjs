@@ -80,6 +80,8 @@ export function create3DRenderer(canvas) {
   shuttle.add(feathers);
   scene.add(shuttle);
   let disposed = false;
+  let lastWidth = 0;
+  let lastHeight = 0;
   function render(state) {
     if (disposed) return;
     const rect = canvas.getBoundingClientRect();
@@ -92,10 +94,14 @@ export function create3DRenderer(canvas) {
     renderer.domElement.style.height = rect.height + 'px';
     const width = Math.max(1, Math.round(rect.width));
     const height = Math.max(1, Math.round(rect.height));
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.fov = camera.aspect < 0.7 ? 55 : 46;
-    camera.updateProjectionMatrix();
+    if (width !== lastWidth || height !== lastHeight) {
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.fov = camera.aspect < 0.7 ? 55 : 46;
+      camera.updateProjectionMatrix();
+      lastWidth = width;
+      lastHeight = height;
+    }
     user.position.set((state.player.x - 0.5) * 6.1, 0, (state.player.y - 0.5) * 13.4);
     opponent.position.set((state.bot.x - 0.5) * 6.1, 0, (state.bot.y - 0.5) * 13.4);
     shuttle.position.set((state.ball.x - 0.5) * 6.1, 0.25 + state.ball.z * 2.8, (state.ball.y - 0.5) * 13.4);
