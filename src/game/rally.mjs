@@ -19,3 +19,16 @@ export function canAiHit(ball, bot, reach) {
   return ball.z > 0 && ball.vy < 0 && ball.y < 0.45 &&
     Math.abs(ball.x - bot.x) < reach && Math.abs(ball.y - bot.y) < reach;
 }
+
+// Interpolate the crossing height to avoid frame-rate-dependent net faults.
+export function crossedNetBelowTape(previous, current, netHeight) {
+  if (!Number.isFinite(previous?.y) || !Number.isFinite(current?.y) ||
+      !Number.isFinite(previous?.z) || !Number.isFinite(current?.z) ||
+      !Number.isFinite(netHeight)) return false;
+  const dy = current.y - previous.y;
+  if (Math.abs(dy) < 1e-9) return false;
+  const fraction = (0.5 - previous.y) / dy;
+  if (fraction < 0 || fraction > 1) return false;
+  const height = previous.z + (current.z - previous.z) * fraction;
+  return height < netHeight;
+}

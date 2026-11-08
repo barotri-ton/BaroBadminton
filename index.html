@@ -5,7 +5,7 @@
 <div id="overlay"><div id="panel"><h1>🏸 Vào sân thi đấu</h1><small>Chơi trực tiếp trên điện thoại • Di chuyển bằng cần điều khiển • Vuốt nút ĐÁNH CẦU lên để đập, xuống để phông, ngang để bỏ nhỏ</small><label>Vợt cầu lông<select id="racket"><option>Yonex Astrox 100 ZZ</option><option>Yonex Nanoflare 1000 Z</option><option>Victor Thruster Ryuga II</option><option>Li-Ning Axforce 90</option></select></label><label>Chế độ chơi<select id="mode"><option value="solo">1 người — Đấu với máy</option><option value="local">2 người — Cùng bàn phím</option></select></label><label>Độ khó<select id="difficulty"><option value="easy">Dễ — Luyện tập</option><option value="normal" selected>Trung bình</option><option value="hard">Khó</option></select></label><label>Loại cầu<select id="shuttle"><option>Cầu lông vũ</option><option>Cầu nhựa</option></select></label><label>Độ căng dây: <span id="tensionLabel">11 kg</span><input id="tension" type="range" min="9" max="13" step=".5" value="11"></label><button id="start">Bắt đầu chơi</button><small id="modeHelp">1 người: WASD / phím mũi tên hoặc joystick, Space để đánh. 2 người: P1 WASD + Space; P2 phím mũi tên + Enter. Trên điện thoại nên chọn đấu với máy.</small><small>Thông số thiết bị là lựa chọn mô phỏng, chưa phải mô hình vật lý chính xác của nhà sản xuất.</small></div></div>
 <script type="module">
 import { newMatch, awardRally, scoreLabel } from './src/game/rules.mjs';
-import { netFaultWinner, sidelineFaultWinner, baselineFaultWinner, canHumanHit, canAiHit } from './src/game/rally.mjs';
+import { netFaultWinner, sidelineFaultWinner, baselineFaultWinner, canHumanHit, canAiHit, crossedNetBelowTape } from './src/game/rally.mjs';
 import { predictIntercept, chooseAiReturn } from './src/game/ai.mjs';
 import { advanceShuttle, launchShuttle, predictLanding, FLIGHT } from './src/game/flight.mjs';
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),overlay=document.getElementById('overlay'),score=document.getElementById('score'),status=document.getElementById('status');
@@ -80,9 +80,9 @@ function update(dt){
     bot.x+=clamp(targetX-bot.x,-dt*aiSpeed,dt*aiSpeed);
     bot.y=clamp(bot.y+clamp(targetY-bot.y,-dt*aiSpeed,dt*aiSpeed),.06,.43);
   }
-  const previousY=ball.y;
+  const previousBall=ball;
   ball=advanceShuttle(ball,dt);
-  if((previousY-.5)*(ball.y-.5)<=0&&ball.z<FLIGHT.netHeight){status.textContent='Cầu chạm lưới!';point(netFaultWinner(ball.vy));return}
+  if(crossedNetBelowTape(previousBall,ball,FLIGHT.netHeight)){status.textContent='Cầu chạm lưới!';point(netFaultWinner(ball.vy));return}
   if(!localMultiplayer&&canAiHit(ball,bot,aiReach)){
     const target=chooseAiReturn(player,difficulty);
     ball=launchShuttle(ball,clamp((target.x-ball.x)*.48,-.3,.3),.46+(difficulty==='hard'?.08:0),.9);
