@@ -30,3 +30,13 @@ test('AI swing is driven by explicit contact pulse, not shuttle direction',()=>{
   assert.match(source,/state\.aiSwingPulse !== lastAiSwingPulse/);
   assert.doesNotMatch(source,/lastOpponentDirection/);
 });
+
+test('racket strings share the same local center as the racket frame',()=>{
+  assert.match(source,/strings\.position\.copy\(racket\.position\)/);
+  assert.doesNotMatch(source,/strings\.position\.sub\(racketRig\.position\)/);
+});
+test('stylized athlete has footwork and idle breathing',()=>{
+  assert.match(source,/actor\.feet\[0\]\.rotation\.x/);
+  assert.match(source,/actor\.legs\[0\]\.rotation\.z/);
+  assert.match(source,/Math\.sin\(now \* 0\.002\)/);
+});
