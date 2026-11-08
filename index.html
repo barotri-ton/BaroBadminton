@@ -80,7 +80,7 @@ function update(dt){
   else if(ball.y>.99||ball.y<.01){status.textContent='Cầu ngoài sân!';point(baselineFaultWinner(ball.y))}
   else if(ball.z<=0){status.textContent='Cầu đã chạm sân!';point(ball.y>.5?1:0)}
 }
-function frame(t){let dt=Math.min((t-last)/1000||0,.04);last=t;update(dt);if(renderer3d){renderer3d.render({player,bot,ball,swingPulse,landing:predictLanding(ball)});}else{draw();}requestAnimationFrame(frame)}requestAnimationFrame(frame);
+function frame(t){let dt=Math.min((t-last)/1000||0,.04);last=t;update(dt);if(renderer3d){renderer3d.render({player,bot,ball,swingPulse,shotType,landing:predictLanding(ball)});}else{draw();}requestAnimationFrame(frame)}requestAnimationFrame(frame);
 const joystick=document.getElementById('joystick'),stick=document.getElementById('stick');
 function moveStick(event){const rect=joystick.getBoundingClientRect(),radius=rect.width/2;let x=(event.clientX-rect.left-radius)/(radius*.64),y=(event.clientY-rect.top-radius)/(radius*.64);const length=Math.hypot(x,y);if(length>1){x/=length;y/=length}joystickX=x;joystickY=y;stick.style.transform='translate('+x*radius*.55+'px,'+y*radius*.55+'px)'}
 function releaseStick(){joystickX=0;joystickY=0;stick.style.transform='translate(0,0)'}
