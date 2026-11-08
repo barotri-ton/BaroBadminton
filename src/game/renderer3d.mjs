@@ -9,7 +9,8 @@ export function create3DRenderer(canvas) {
   camera.position.set(0, 10.8, 15.5);
   camera.lookAt(0, 0.1, -0.35);
   const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'low-power' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  // Limit GPU fill rate on mobile portrait displays.
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -22,7 +23,7 @@ export function create3DRenderer(canvas) {
   const sunlight = new THREE.DirectionalLight(0xffffff, 1.8);
   sunlight.position.set(-4, 12, 8);
   sunlight.castShadow = true;
-  sunlight.shadow.mapSize.set(1024, 1024);
+  sunlight.shadow.mapSize.set(512, 512);
   sunlight.shadow.camera.left = -9;
   sunlight.shadow.camera.right = 9;
   sunlight.shadow.camera.top = 10;
@@ -308,7 +309,7 @@ export function create3DRenderer(canvas) {
       lastHeight = height;
     }
     const now = performance.now();
-    const frameDelta = Math.min((now - lastTime) / 1000 || 0, 0.05);
+    const frameDelta = Math.max(0, Math.min((now - lastTime) / 1000 || 0, 0.05));
     lastTime = now;
     if (state.swingPulse !== lastSwingPulse) {
       lastSwingPulse = state.swingPulse;
@@ -330,8 +331,9 @@ export function create3DRenderer(canvas) {
       const lateral = moving ? pose.lateral : 0;
       actor.legs[0].rotation.x = gait;
       actor.legs[1].rotation.x = -gait;
-      actor.legs[0].rotation.z = THREE.MathUtils.lerp(actor.legs[0].rotation.z, lateral, 0.22);
-      actor.legs[1].rotation.z = THREE.MathUtils.lerp(actor.legs[1].rotation.z, -lateral, 0.22);
+      const poseSmooth = 1 - Math.exp(-frameDelta * 15);
+      actor.legs[0].rotation.z = THREE.MathUtils.lerp(actor.legs[0].rotation.z, lateral, poseSmooth);
+      actor.legs[1].rotation.z = THREE.MathUtils.lerp(actor.legs[1].rotation.z, -lateral, poseSmooth);
       actor.knees[0].rotation.x = Math.max(0, gait) * 0.38;
       actor.knees[1].rotation.x = Math.max(0, -gait) * 0.38;
       actor.elbows[0].rotation.x = Math.max(0, -gait) * 0.22;
@@ -340,8 +342,8 @@ export function create3DRenderer(canvas) {
       actor.feet[1].rotation.x = Math.min(0, gait) * 0.28;
       actor.arms[0].rotation.x = -gait * 0.5;
       actor.arms[1].rotation.x = gait * 0.5;
-      actor.torsoRig.rotation.z = THREE.MathUtils.lerp(actor.torsoRig.rotation.z, moving ? pose.leanZ : 0, 0.16);
-      actor.torsoRig.rotation.x = THREE.MathUtils.lerp(actor.torsoRig.rotation.x, moving ? pose.leanX : 0, 0.16);
+      actor.torsoRig.rotation.z = THREE.MathUtils.lerp(actor.torsoRig.rotation.z, moving ? pose.leanZ : 0, poseSmooth);
+      actor.torsoRig.rotation.x = THREE.MathUtils.lerp(actor.torsoRig.rotation.x, moving ? pose.leanX : 0, poseSmooth);
       actor.group.position.set(x, moving ? Math.abs(Math.sin(actor.stride)) * 0.045 : Math.sin(now * 0.002) * 0.009, z);
       actor.previous.set(x, 0, z);
     }
@@ -400,6 +402,23 @@ export function create3DRenderer(canvas) {
     }
     renderer.render(scene, camera);
   }
-  function dispose() { disposed = true; renderer.dispose(); renderer.domElement.remove(); }
+  function dispose() {
+    if (disposed) return;
+    disposed = true;
+    // Dispose shared geometries/materials only once, including lines and shadows.
+    const geometries = new Set();
+    const materials = new Set();
+    scene.traverse((object) => {
+      if (object.geometry) geometries.add(object.geometry);
+      if (object.material) {
+        for (const material of Array.isArray(object.material) ? object.material : [object.material]) materials.add(material);
+      }
+    });
+    for (const geometry of geometries) geometry.dispose();
+    for (const material of materials) material.dispose();
+    renderer.renderLists.dispose();
+    renderer.dispose();
+    renderer.domElement.remove();
+  }
   return { render, dispose };
 }

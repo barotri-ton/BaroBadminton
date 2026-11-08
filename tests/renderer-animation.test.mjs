@@ -71,3 +71,17 @@ test('racket grip and shaft align with wrist-relative racket head',()=>{
   assert.match(source,/shaft\.position\.set\(0\.07, 0\.235, 0\)/);
   assert.match(source,/racketRig\.add\(grip\)/);
 });
+
+test('mobile rendering limits pixel density and shadow texture size',()=>{
+  assert.match(source,/Math\.min\(window\.devicePixelRatio \|\| 1, 1\.25\)/);
+  assert.match(source,/sunlight\.shadow\.mapSize\.set\(512, 512\)/);
+});
+test('animation smoothing depends on elapsed time',()=>{
+  assert.match(source,/poseSmooth = 1 - Math\.exp\(-frameDelta \* 15\)/);
+});
+test('renderer disposes GPU resources and safely handles repeat disposal',()=>{
+  assert.match(source,/if \(disposed\) return/);
+  assert.match(source,/scene\.traverse/);
+  assert.match(source,/geometry\.dispose\(\)/);
+  assert.match(source,/material\.dispose\(\)/);
+});
