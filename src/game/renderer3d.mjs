@@ -117,6 +117,7 @@ export function create3DRenderer(canvas) {
     group.add(shirtStripe);
     const legs = [];
     const feet = [];
+    const knees = [];
     for (const side of [-1, 1]) {
       const leg = new THREE.Group();
       leg.position.set(side * 0.14, 0.38, 0);
@@ -124,29 +125,46 @@ export function create3DRenderer(canvas) {
       limb.position.y = -0.23;
       limb.castShadow = true;
       leg.add(limb);
+      const knee = new THREE.Group();
+      knee.position.y = -0.37;
+      const shin = new THREE.Mesh(new THREE.CapsuleGeometry(0.067, 0.18, 3, 6), mat('#f1c7a4'));
+      shin.position.y = -0.12;
+      shin.castShadow = true;
+      knee.add(shin);
+      leg.add(knee);
+      knees.push(knee);
       const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.13, 0.37), mat('#f5f7fc'));
       shoe.position.set(0, -0.57, 0.09);
-      leg.add(shoe);
+      knee.add(shoe);
+      shoe.position.y += 0.37;
       group.add(leg);
       legs.push(leg);
       feet.push(shoe);
     }
     const eyes = [];
     const arms = [];
+    const elbows = [];
     for (const side of [-1, 1]) {
       const arm = new THREE.Group();
       arm.position.set(side * 0.32, 1.13, 0);
       const limb = new THREE.Mesh(new THREE.CapsuleGeometry(0.075, 0.43, 3, 6), mat('#f1c7a4'));
       limb.position.y = -0.27;
       arm.add(limb);
+      const elbow = new THREE.Group();
+      elbow.position.y = -0.42;
+      const forearm = new THREE.Mesh(new THREE.CapsuleGeometry(0.063, 0.19, 3, 6), mat('#f1c7a4'));
+      forearm.position.y = -0.11;
+      elbow.add(forearm);
+      arm.add(elbow);
+      elbows.push(elbow);
       group.add(arm);
       arms.push(arm);
     }
     const wristbands = [];
-    for (const arm of arms) {
+    for (const elbow of elbows) {
       const band = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.09, 8), mat('#f4f8ff'));
-      band.position.y = -0.47;
-      arm.add(band);
+      band.position.y = -0.19;
+      elbow.add(band);
       wristbands.push(band);
     }
     const collar = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.09, 0.28), mat('#f8fafc'));
@@ -214,7 +232,7 @@ export function create3DRenderer(canvas) {
       part.position.y -= torsoRig.position.y;
     }
     scene.add(group);
-    return { group, torsoRig, legs, feet, arms, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
+    return { group, torsoRig, legs, knees, feet, arms, elbows, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
   }
   const user = athlete('#4fb7ff');
   const opponent = athlete('#f26c79');
@@ -305,6 +323,10 @@ export function create3DRenderer(canvas) {
       actor.legs[1].rotation.x = -gait;
       actor.legs[0].rotation.z = THREE.MathUtils.lerp(actor.legs[0].rotation.z, lateral, 0.22);
       actor.legs[1].rotation.z = THREE.MathUtils.lerp(actor.legs[1].rotation.z, -lateral, 0.22);
+      actor.knees[0].rotation.x = Math.max(0, gait) * 0.38;
+      actor.knees[1].rotation.x = Math.max(0, -gait) * 0.38;
+      actor.elbows[0].rotation.x = Math.max(0, -gait) * 0.22;
+      actor.elbows[1].rotation.x = Math.max(0, gait) * 0.22;
       actor.feet[0].rotation.x = -Math.max(0, gait) * 0.28;
       actor.feet[1].rotation.x = Math.min(0, gait) * 0.28;
       actor.arms[0].rotation.x = -gait * 0.5;
@@ -323,6 +345,7 @@ export function create3DRenderer(canvas) {
     const opponentSwingProgress = Math.min(1, (now - opponentSwingStart) / 440);
     const opponentSwingAngle = opponentSwingProgress < 1 ? Math.sin(opponentSwingProgress * Math.PI) : 0;
     opponent.arms[1].rotation.x = -opponentSwingAngle * 1.4;
+    opponent.elbows[1].rotation.x = -opponentSwingAngle * 0.8;
     opponent.racketRig.rotation.x = -opponentSwingAngle * 1.05;
     opponent.racketRig.rotation.z = -opponentSwingAngle * 0.3;
     const duration = currentShot === 'smash' ? 330 : currentShot === 'drop' ? 540 : 430;
@@ -339,6 +362,7 @@ export function create3DRenderer(canvas) {
       impactRing.material.opacity = (1 - impactAge) * 0.75;
     }
     user.arms[1].rotation.x = -swingAngle;
+    user.elbows[1].rotation.x = -swingAngle * 0.45;
     user.racket.rotation.z = 0.35 - swingAngle * 0.3;
     user.strings.rotation.z = user.racket.rotation.z;
     user.racketRig.rotation.x = -swingAngle * 0.72;
