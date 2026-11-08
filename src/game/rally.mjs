@@ -2,7 +2,7 @@
 // Side 0 = human (near court), side 1 = AI (far court).
 export function netFaultWinner(velocityY) {
   if (!Number.isFinite(velocityY) || velocityY === 0) throw new RangeError('Invalid shuttle direction');
-  return velocityY > 0 ? 1 : 0;
+  return velocityY > 0 ? 0 : 1;
 }
 export function sidelineFaultWinner(velocityY) {
   return netFaultWinner(velocityY);
