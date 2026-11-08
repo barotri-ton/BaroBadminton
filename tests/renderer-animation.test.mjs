@@ -25,3 +25,8 @@ test('impact ring and shuttle trail are included',()=>{
   assert.match(source,/impactRing\.visible/);
   assert.match(source,/shuttleTrail\.push/);
 });
+
+test('AI swing is driven by explicit contact pulse, not shuttle direction',()=>{
+  assert.match(source,/state\.aiSwingPulse !== lastAiSwingPulse/);
+  assert.doesNotMatch(source,/lastOpponentDirection/);
+});
