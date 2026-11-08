@@ -104,10 +104,18 @@ export function create3DRenderer(canvas) {
     body.position.y = 0.85;
     body.castShadow = true;
     group.add(body);
+    const waist = new THREE.Mesh(new THREE.CylinderGeometry(0.245, 0.215, 0.22, 10), mat(color));
+    waist.position.y = 0.56;
+    waist.castShadow = true;
+    group.add(waist);
     const shorts = new THREE.Mesh(new THREE.BoxGeometry(0.49, 0.25, 0.33), mat('#183c55'));
     shorts.position.y = 0.46;
     group.add(shorts);
+    const shirtStripe = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.49, 0.015), mat('#e8fff7'));
+    shirtStripe.position.set(-0.14, 0.92, 0.255);
+    group.add(shirtStripe);
     const legs = [];
+    const feet = [];
     for (const side of [-1, 1]) {
       const leg = new THREE.Group();
       leg.position.set(side * 0.14, 0.38, 0);
@@ -120,6 +128,7 @@ export function create3DRenderer(canvas) {
       leg.add(shoe);
       group.add(leg);
       legs.push(leg);
+      feet.push(shoe);
     }
     const arms = [];
     for (const side of [-1, 1]) {
@@ -131,12 +140,22 @@ export function create3DRenderer(canvas) {
       group.add(arm);
       arms.push(arm);
     }
+    const wristbands = [];
+    for (const arm of arms) {
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.09, 8), mat('#f4f8ff'));
+      band.position.y = -0.47;
+      arm.add(band);
+      wristbands.push(band);
+    }
     const collar = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.09, 0.28), mat('#f8fafc'));
     collar.position.y = 1.23;
     group.add(collar);
     const hair = new THREE.Mesh(new THREE.SphereGeometry(0.225, 10, 8, 0, Math.PI * 2, 0, Math.PI / 2), mat('#20242e'));
     hair.position.y = 1.61;
     group.add(hair);
+    const fringe = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.38), mat('#20242e'));
+    fringe.position.set(0, 1.7, 0.06);
+    group.add(fringe);
     const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), mat('#f5d0ad'));
     head.position.y = 1.56;
     head.castShadow = true;
@@ -174,14 +193,15 @@ export function create3DRenderer(canvas) {
     strings.position.copy(racket.position);
     strings.rotation.copy(racket.rotation);
     racketRig.add(strings);
-    strings.position.sub(racketRig.position);
+    // Strings already inherit the racket's local coordinates.
+
     const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.68, 6), mat('#d4e0ed'));
     shaft.position.set(0.3, 0.94, 0);
     shaft.rotation.z = -0.6;
     racketRig.add(shaft);
     shaft.position.sub(racketRig.position);
     scene.add(group);
-    return { group, legs, arms, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
+    return { group, legs, feet, arms, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
   }
   const user = athlete('#4fb7ff');
   const opponent = athlete('#f26c79');
@@ -265,13 +285,18 @@ export function create3DRenderer(canvas) {
       const dz = z - actor.previous.z;
       if (moving) actor.stride += Math.min(distance, 0.2) * 12;
       const gait = moving ? Math.sin(actor.stride) * 0.42 : 0;
+      const lateral = moving ? THREE.MathUtils.clamp(dx * 0.4, -0.2, 0.2) : 0;
       actor.legs[0].rotation.x = gait;
       actor.legs[1].rotation.x = -gait;
+      actor.legs[0].rotation.z = THREE.MathUtils.lerp(actor.legs[0].rotation.z, lateral, 0.22);
+      actor.legs[1].rotation.z = THREE.MathUtils.lerp(actor.legs[1].rotation.z, -lateral, 0.22);
+      actor.feet[0].rotation.x = -Math.max(0, gait) * 0.28;
+      actor.feet[1].rotation.x = Math.min(0, gait) * 0.28;
       actor.arms[0].rotation.x = -gait * 0.5;
       actor.arms[1].rotation.x = gait * 0.5;
       actor.group.rotation.z = THREE.MathUtils.lerp(actor.group.rotation.z, moving ? THREE.MathUtils.clamp(-dx * 0.9, -0.16, 0.16) : 0, 0.16);
       actor.group.rotation.x = THREE.MathUtils.lerp(actor.group.rotation.x, moving ? THREE.MathUtils.clamp(dz * 0.65, -0.12, 0.12) : 0, 0.16);
-      actor.group.position.set(x, moving ? Math.abs(Math.sin(actor.stride)) * 0.045 : 0, z);
+      actor.group.position.set(x, moving ? Math.abs(Math.sin(actor.stride)) * 0.045 : Math.sin(now * 0.002) * 0.009, z);
       actor.previous.set(x, 0, z);
     }
     animateAthlete(user, state.player);
