@@ -6,7 +6,8 @@
 <script type="module">
 import { newMatch, awardRally, scoreLabel } from './src/game/rules.mjs';
 import { netFaultWinner, sidelineFaultWinner, baselineFaultWinner, canHumanHit, canAiHit } from './src/game/rally.mjs';
-import { predictIntercept, chooseAiReturn, estimateLanding } from './src/game/ai.mjs';
+import { predictIntercept, chooseAiReturn } from './src/game/ai.mjs';
+import { advanceShuttle, launchShuttle, predictLanding, FLIGHT } from './src/game/flight.mjs';
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),overlay=document.getElementById('overlay'),score=document.getElementById('score'),status=document.getElementById('status');
 let renderer3d=null;
 let shotType='clear',rallyHits=0,swingPulse=0,joystickX=0,joystickY=0,swipeStart=null;
@@ -16,7 +17,7 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));const pos=(x,y)=>({x:w*(.14+.72*x
 function draw(){ctx.clearRect(0,0,w,h);ctx.fillStyle='#123a45';ctx.fillRect(0,0,w,h);const a=pos(0,0),b=pos(1,1);ctx.fillStyle='#16836f';ctx.fillRect(a.x,a.y,b.x-a.x,b.y-a.y);ctx.strokeStyle='#e6fff4';ctx.lineWidth=2;ctx.strokeRect(a.x,a.y,b.x-a.x,b.y-a.y);ctx.beginPath();ctx.moveTo(w/2,a.y);ctx.lineTo(w/2,b.y);ctx.moveTo(a.x,h/2);ctx.lineTo(b.x,h/2);ctx.moveTo(a.x,h*.29);ctx.lineTo(b.x,h*.29);ctx.moveTo(a.x,h*.71);ctx.lineTo(b.x,h*.71);ctx.stroke();ctx.fillStyle='#d7f4ff';ctx.fillRect(a.x-6,h/2-3,b.x-a.x+12,6);ctx.fillStyle='#d9e6ed';ctx.fillRect(a.x-5,h/2-16,4,30);ctx.fillRect(b.x+1,h/2-16,4,30);
 function person(p,color){let q=pos(p.x,p.y);ctx.fillStyle='#0005';ctx.beginPath();ctx.ellipse(q.x,q.y+12,15,6,0,0,7);ctx.fill();ctx.fillStyle=color;ctx.beginPath();ctx.arc(q.x,q.y-7,13,0,7);ctx.fill();ctx.fillStyle='#ffe0bd';ctx.beginPath();ctx.arc(q.x,q.y-22,7,0,7);ctx.fill();ctx.strokeStyle='#e7edf0';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(q.x+10,q.y-9);ctx.lineTo(q.x+23,q.y-25);ctx.stroke();ctx.beginPath();ctx.ellipse(q.x+27,q.y-30,9,14,-.6,0,7);ctx.stroke()}
 person(bot,'#f66c79');person(player,'#5ab9ff');const q=pos(ball.x,ball.y);ctx.fillStyle='#0004';ctx.beginPath();ctx.ellipse(q.x,q.y+5,7,3,0,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(q.x,q.y-30-ball.z*45,7,11,.4,0,7);ctx.fill();ctx.fillStyle='#ffcb58';ctx.beginPath();ctx.arc(q.x-2,q.y-22-ball.z*45,3,0,7);ctx.fill()}
-function reset(towardPlayer=true){ball={x:.5,y:towardPlayer?.45:.55,z:.3,vx:(Math.random()-.5)*.12,vy:towardPlayer?.25:-.25,vz:.8};cooldown=.45;rallyHits=0}
+function reset(towardPlayer=true){ball=launchShuttle({x:.5,y:towardPlayer?.45:.55,z:.55},(Math.random()-.5)*.12,towardPlayer?.42:-.42,.62);cooldown=.45;rallyHits=0}
 function point(side){
   if(!playing||paused)return;
   const previousGames=[...match.games];
@@ -42,9 +43,7 @@ function swing(){
     const tension=Number(document.getElementById('tension').value);
     const shots={clear:{speed:.39,height:1.1,name:'Phông cầu'},drop:{speed:.21,height:.46,name:'Bỏ nhỏ'},smash:{speed:.65,height:.32,name:'Đập cầu'}};
     const shot=shots[shotType];
-    ball.vy=-shot.speed*(1+(tension-11)*.012);
-    ball.vx=clamp((.5-ball.x)*.22+(Math.random()-.5)*.09,-.22,.22);
-    ball.vz=shot.height;
+    ball=launchShuttle(ball,clamp((.5-ball.x)*.22+(Math.random()-.5)*.09,-.22,.22),-shot.speed*(1+(tension-11)*.012),shot.height);
     cooldown=.24;
     rallyHits++;
     status.textContent=shot.name+' thành công!';
@@ -69,22 +68,19 @@ function update(dt){
   bot.x+=clamp(targetX-bot.x,-dt*aiSpeed,dt*aiSpeed);
   bot.y=clamp(bot.y+clamp(targetY-bot.y,-dt*aiSpeed,dt*aiSpeed),.06,.43);
   const previousY=ball.y;
-  ball.x+=ball.vx*dt;
-  ball.y+=ball.vy*dt;
-  ball.z=Math.max(0,ball.z-dt*.42);
-  if((previousY-.5)*(ball.y-.5)<=0&&ball.z<.12){status.textContent='Cầu chạm lưới!';point(netFaultWinner(ball.vy));return}
+  ball=advanceShuttle(ball,dt);
+  if((previousY-.5)*(ball.y-.5)<=0&&ball.z<FLIGHT.netHeight){status.textContent='Cầu chạm lưới!';point(netFaultWinner(ball.vy));return}
   if(canAiHit(ball,bot,aiReach)){
-    ball.vy=.29+(difficulty==='hard'?.12:0);
     const target=chooseAiReturn(player,difficulty);
-    ball.vx=clamp((target.x-ball.x)*.48,-.3,.3);
-    ball.vz=.85;
+    ball=launchShuttle(ball,clamp((target.x-ball.x)*.48,-.3,.3),.46+(difficulty==='hard'?.08:0),.9);
     rallyHits++;
     status.textContent='Máy trả cầu!';
   }
   if(ball.x<0||ball.x>1){status.textContent='Cầu ngoài sân!';point(sidelineFaultWinner(ball.vy))}
   else if(ball.y>.99||ball.y<.01){status.textContent='Cầu ngoài sân!';point(baselineFaultWinner(ball.y))}
+  else if(ball.z<=0){status.textContent='Cầu đã chạm sân!';point(ball.y>.5?1:0)}
 }
-function frame(t){let dt=Math.min((t-last)/1000||0,.04);last=t;update(dt);if(renderer3d){renderer3d.render({player,bot,ball,swingPulse,landing:estimateLanding(ball)});}else{draw();}requestAnimationFrame(frame)}requestAnimationFrame(frame);
+function frame(t){let dt=Math.min((t-last)/1000||0,.04);last=t;update(dt);if(renderer3d){renderer3d.render({player,bot,ball,swingPulse,landing:predictLanding(ball)});}else{draw();}requestAnimationFrame(frame)}requestAnimationFrame(frame);
 const joystick=document.getElementById('joystick'),stick=document.getElementById('stick');
 function moveStick(event){const rect=joystick.getBoundingClientRect(),radius=rect.width/2;let x=(event.clientX-rect.left-radius)/(radius*.64),y=(event.clientY-rect.top-radius)/(radius*.64);const length=Math.hypot(x,y);if(length>1){x/=length;y/=length}joystickX=x;joystickY=y;stick.style.transform='translate('+x*radius*.55+'px,'+y*radius*.55+'px)'}
 function releaseStick(){joystickX=0;joystickY=0;stick.style.transform='translate(0,0)'}
