@@ -224,7 +224,7 @@ export function create3DRenderer(canvas) {
   let currentShot = 'clear';
   let impactPosition = new THREE.Vector3();
   let impactStart = -1000;
-  let lastOpponentDirection = 0;
+  let lastAiSwingPulse = 0;
   let opponentSwingStart = -1000;
   function render(state) {
     if (disposed) return;
@@ -276,8 +276,10 @@ export function create3DRenderer(canvas) {
     }
     animateAthlete(user, state.player);
     animateAthlete(opponent, state.bot);
-    if (state.ball.vy > 0 && lastOpponentDirection < 0 && state.ball.y < 0.48) opponentSwingStart = now;
-    lastOpponentDirection = state.ball.vy;
+    if (state.aiSwingPulse !== lastAiSwingPulse) {
+      lastAiSwingPulse = state.aiSwingPulse;
+      opponentSwingStart = now;
+    }
     const opponentSwingProgress = Math.min(1, (now - opponentSwingStart) / 440);
     const opponentSwingAngle = opponentSwingProgress < 1 ? Math.sin(opponentSwingProgress * Math.PI) : 0;
     opponent.arms[1].rotation.x = -opponentSwingAngle * 1.4;
