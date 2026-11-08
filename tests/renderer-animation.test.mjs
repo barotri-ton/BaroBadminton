@@ -47,3 +47,15 @@ test('waist pivot rig separates upper body from footwork',()=>{
   assert.match(source,/part\.position\.y -= torsoRig\.position\.y/);
   assert.match(source,/torsoRig, legs, feet, arms/);
 });
+
+test('legs have articulated knees and shoes attached below the knee',()=>{
+  assert.match(source,/const knee = new THREE\.Group\(\)/);
+  assert.match(source,/knee\.add\(shoe\)/);
+  assert.match(source,/actor\.knees\[0\]\.rotation\.x/);
+});
+test('arms have animated elbow joints for player and opponent',()=>{
+  assert.match(source,/const elbow = new THREE\.Group\(\)/);
+  assert.match(source,/elbow\.add\(forearm\)/);
+  assert.match(source,/user\.elbows\[1\]\.rotation\.x/);
+  assert.match(source,/opponent\.elbows\[1\]\.rotation\.x/);
+});
