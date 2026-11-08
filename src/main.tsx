@@ -117,6 +117,10 @@ function App() {
         const touch = touchAxis.current;
         let nextPlayers = playersRef.current;
         let nextShuttle = shuttleRef.current;
+        if (mobileModeRef.current && !nextShuttle.active && scoreRef.current.server === 2 && lastHitter.current !== 2) {
+          nextShuttle = launchShuttle({ x: nextPlayers[1].x, y: 1.05, z: nextPlayers[1].z }, { x: nextPlayers[0].x, y: 0.3, z: -4 }, 1.15);
+          lastHitter.current = 2;
+        }
         let rallyEnded = false;
         while (accumulator >= PHYSICS_DT) {
           nextPlayers = [movePlayer(nextPlayers[0], 1, axes('d', 'a') + touch.x, axes('s', 'w') + touch.z, PHYSICS_DT), movePlayer(nextPlayers[1], 2, mobileModeRef.current ? Math.sign(nextShuttle.position.x - nextPlayers[1].x) * (nextShuttle.active && nextShuttle.position.z > 0 ? 1 : 0) : axes('arrowright', 'arrowleft'), mobileModeRef.current ? Math.sign((nextShuttle.active && nextShuttle.position.z > 0 ? nextShuttle.position.z : 4) - nextPlayers[1].z) : axes('arrowdown', 'arrowup'), PHYSICS_DT)];
@@ -131,6 +135,7 @@ function App() {
               nextShuttle = { ...nextShuttle, active: false };
               const winner = lastHitter.current === 1 ? 2 : 1;
               syncScore(awardRally(scoreRef.current, winner));
+              lastHitter.current = null;
               setMessage(vi.gameplay.net);
               rallyEnded = true;
             } else if (!nextShuttle.active) {
@@ -138,6 +143,7 @@ function App() {
               const landedOnOpponentHalf = lastHitter.current === 1 ? nextShuttle.position.z > 0 : nextShuttle.position.z < 0;
               const winner = inCourt && landedOnOpponentHalf ? lastHitter.current! : (lastHitter.current === 1 ? 2 : 1);
               syncScore(awardRally(scoreRef.current, winner));
+              lastHitter.current = null;
               setMessage(inCourt ? vi.gameplay.in : vi.gameplay.out);
               rallyEnded = true;
             }
