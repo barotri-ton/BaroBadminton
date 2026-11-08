@@ -63,12 +63,12 @@ test('arms have animated elbow joints for player and opponent',()=>{
 test('racket follows dominant forearm rather than floating at torso',()=>{
   assert.match(source,/elbows\[1\]\.add\(racketRig\)/);
   assert.match(source,/torsoRig\.remove\(racketRig\)/);
-  assert.match(source,/racketRig\.position\.set\(0, 0\.33, 0\)/);
+  assert.match(source,/racketRig\.position\.set\(0, -0\.24, 0\)/);
 });
 
 test('racket grip and shaft align with wrist-relative racket head',()=>{
   assert.match(source,/racket\.position\.set\(0\.16, 0\.55, 0\)/);
-  assert.match(source,/shaft\.position\.set\(0\.07, 0\.235, 0\)/);
+  assert.match(source,/shaft\.position\.set\(0\.085, 0\.245, 0\)/);
   assert.match(source,/racketRig\.add\(grip\)/);
 });
 
