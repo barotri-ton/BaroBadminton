@@ -85,3 +85,13 @@ test('renderer disposes GPU resources and safely handles repeat disposal',()=>{
   assert.match(source,/geometry\.dispose\(\)/);
   assert.match(source,/material\.dispose\(\)/);
 });
+
+test('first athlete frame initializes its prior position before calculating stride',()=>{
+  assert.match(source,/if \(!actor\.poseInitialized\)/);
+  assert.match(source,/actor\.previous\.set\(x, 0, z\)/);
+  assert.match(source,/actor\.poseInitialized = true/);
+});
+test('renderer bounds animation movement and initializes first frame delta',()=>{
+  assert.match(source,/distance < 3/);
+  assert.match(source,/lastTime \? Math\.max/);
+});

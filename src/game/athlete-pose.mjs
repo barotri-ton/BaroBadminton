@@ -1,6 +1,7 @@
 // Pure, frame-rate independent pose targets for lightweight 3D badminton athletes.
 export function athletePose({dx=0,dz=0,dt=1/60,stride=0,shot='clear',swingProgress=1}={}) {
-  const speed = Math.hypot(dx,dz)/Math.max(dt,1/240);
+  const elapsed = Number.isFinite(dt) && dt > 0 ? Math.max(dt, 1/240) : 1/60;
+  const speed = Math.hypot(dx,dz)/elapsed;
   const motion = Math.min(1, speed/5);
   const nextStride = stride + Math.min(Math.hypot(dx,dz),0.2)*12;
   const gait = Math.sin(nextStride)*0.42*motion;

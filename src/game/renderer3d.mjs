@@ -221,8 +221,8 @@ export function create3DRenderer(canvas) {
     racket.position.set(0.16, 0.55, 0);
     strings.position.copy(racket.position);
     const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.48, 6), mat('#d4e0ed'));
-    shaft.position.set(0.07, 0.235, 0);
-    shaft.rotation.z = -0.30;
+    shaft.position.set(0.085, 0.245, 0);
+    shaft.rotation.z = -0.34;
     racketRig.add(shaft);
     const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.043, 0.20, 8), mat('#26384c'));
     grip.position.y = 0.015;
@@ -242,7 +242,7 @@ export function create3DRenderer(canvas) {
     elbows[1].add(racketRig);
     racketRig.position.set(0, -0.24, 0);
     scene.add(group);
-    return { group, torsoRig, legs, knees, feet, arms, elbows, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
+    return { group, torsoRig, legs, knees, feet, arms, elbows, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), poseInitialized: false, stride: 0, facing: 0 };
   }
   const user = athlete('#4fb7ff');
   const opponent = athlete('#f26c79');
@@ -309,7 +309,7 @@ export function create3DRenderer(canvas) {
       lastHeight = height;
     }
     const now = performance.now();
-    const frameDelta = Math.max(0, Math.min((now - lastTime) / 1000 || 0, 0.05));
+    const frameDelta = lastTime ? Math.max(0, Math.min((now - lastTime) / 1000, 0.05)) : 1 / 60;
     lastTime = now;
     if (state.swingPulse !== lastSwingPulse) {
       lastSwingPulse = state.swingPulse;
@@ -321,8 +321,13 @@ export function create3DRenderer(canvas) {
     function animateAthlete(actor, position) {
       const x = (position.x - 0.5) * 6.1;
       const z = (position.y - 0.5) * 13.4;
+      // First render is a placement, not a sprint across the court.
+      if (!actor.poseInitialized) {
+        actor.previous.set(x, 0, z);
+        actor.poseInitialized = true;
+      }
       const distance = Math.hypot(x - actor.previous.x, z - actor.previous.z);
-      const moving = distance > 0.002;
+      const moving = distance > 0.002 && distance < 3;
       const dx = x - actor.previous.x;
       const dz = z - actor.previous.z;
       const pose = athletePose({dx, dz, dt:frameDelta || 1/60, stride:actor.stride});
