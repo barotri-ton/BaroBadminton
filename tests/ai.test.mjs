@@ -21,3 +21,14 @@ test('interception horizon limits drag-adjusted travel',()=>{
   assert.equal(p.time,.5);
   assert.ok(p.x>.4&&p.x<.45);
 });
+
+test('AI stops intercept prediction at shuttle ground contact',()=>{
+  const p=predictIntercept({x:.4,y:.3,z:.01,vzVelocity:-.5,vx:.4,vy:-.2},.1);
+  assert.ok(p.time>0&&p.time<.05);
+  assert.ok(p.x>.4&&p.x<.42);
+});
+test('AI does not chase a shuttle already on the ground',()=>{
+  const p=predictIntercept({x:.4,y:.3,z:0,vzVelocity:-.5,vx:.4,vy:-.2},.1);
+  assert.equal(p.time,0);
+  assert.equal(p.x,.4);
+});

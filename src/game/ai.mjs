@@ -9,8 +9,17 @@ export function predictIntercept(ball, targetY, maxTime = 1.8) {
   const distance = (targetY - ball.y) / ball.vy;
   const ratio = drag * distance;
   const time = distance <= 0 ? 0 : ratio >= 1 ? maxTime : Math.min(maxTime, -Math.log1p(-ratio) / drag);
-  const travel = -Math.expm1(-drag * time) / drag;
-  return { x: Math.max(0.04, Math.min(0.96, ball.x + ball.vx * travel)), y: targetY, time };
+  // Never chase a projected interception after the shuttle has already landed.
+  // Older callers without height information retain their original behavior.
+  const height = ball.z;
+  const verticalSpeed = ball.vzVelocity ?? 0;
+  let reachableTime = time;
+  if (Number.isFinite(height) && height >= 0 && Number.isFinite(verticalSpeed)) {
+    const groundTime = Math.max(0, (verticalSpeed + Math.sqrt(verticalSpeed * verticalSpeed + 2 * FLIGHT.gravity * height)) / FLIGHT.gravity);
+    reachableTime = Math.min(time, groundTime);
+  }
+  const travel = -Math.expm1(-drag * reachableTime) / drag;
+  return { x: Math.max(0.04, Math.min(0.96, ball.x + ball.vx * travel)), y: targetY, time: reachableTime };
 }
 export function chooseAiReturn(player, difficulty = 'normal', random = Math.random()) {
   const side = player.x < 0.5 ? 0.78 : 0.22;
