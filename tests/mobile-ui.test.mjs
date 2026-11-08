@@ -29,3 +29,17 @@ test('all three shot types and AI difficulties are wired to gameplay', () => {
   assert.match(html, /const shots=\{/);
   assert.match(html, /const aiSpeed=\{/);
 });
+
+test('virtual joystick supports capture, movement and release',()=>{
+  assert.match(html,/id="joystick"/);
+  assert.match(html,/function moveStick\(event\)/);
+  assert.match(html,/function releaseStick\(\)/);
+  assert.match(html,/joystick\.setPointerCapture/);
+  assert.match(html,/lostpointercapture/);
+});
+test('swiping hit button selects arcade shot types',()=>{
+  assert.match(html,/hitButton\.addEventListener\('pointerup'/);
+  assert.match(html,/Math\.hypot\(dx,dy\)>18/);
+  assert.match(html,/dy< -16\?'smash'/);
+  assert.match(html,/dy>16\?'clear':'drop'/);
+});
