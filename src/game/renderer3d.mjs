@@ -239,6 +239,7 @@ export function create3DRenderer(canvas) {
   let lastHeight = 0;
   let lastTime = 0;
   const lookTarget = new THREE.Vector3(0, 0.4, -0.4);
+  const cameraGoal = new THREE.Vector3(0, 10.8, 15.5);
   let lastSwingPulse = 0;
   let swingStart = -1000;
   let currentShot = 'clear';
@@ -261,7 +262,7 @@ export function create3DRenderer(canvas) {
     if (width !== lastWidth || height !== lastHeight) {
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
-      camera.fov = camera.aspect < 0.7 ? 42 : 39;
+      camera.fov = camera.aspect < 0.7 ? 47 : 39;
       camera.updateProjectionMatrix();
       lastWidth = width;
       lastHeight = height;
@@ -327,11 +328,14 @@ export function create3DRenderer(canvas) {
     user.strings.rotation.z = user.racket.rotation.z;
     user.racketRig.rotation.x = -swingAngle * 0.72;
     user.racketRig.rotation.z = -swingAngle * 0.28;
-    const focusX = (state.ball.x - 0.5) * 0.65;
-    const focusZ = (state.ball.y - 0.5) * 1.2;
+    const portrait = camera.aspect < 0.7;
+    const focusX = (state.ball.x - 0.5) * 0.5 + (state.player.x - 0.5) * 0.35;
+    const focusZ = (state.ball.y - 0.5) * 0.85;
     const smooth = 1 - Math.exp(-frameDelta * 2.5);
     lookTarget.x += (focusX - lookTarget.x) * smooth;
     lookTarget.z += (focusZ - 0.4 - lookTarget.z) * smooth;
+    cameraGoal.set((state.player.x - 0.5) * 1.1, portrait ? 12.5 : 10.8, portrait ? 17.5 : 15.5);
+    camera.position.lerp(cameraGoal, smooth * 0.55);
     camera.lookAt(lookTarget);
     shuttle.position.set((state.ball.x - 0.5) * 6.1, 0.25 + state.ball.z * 2.8, (state.ball.y - 0.5) * 13.4);
     const trailLength = Math.hypot(state.ball.vx, state.ball.vy);
