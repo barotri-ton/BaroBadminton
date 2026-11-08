@@ -19,7 +19,7 @@ test('athletes lean during movement and recover at rest',()=>{
 test('smash and drop have different animation durations and power',()=>{
   assert.match(source,/currentShot === 'smash' \? 330/);
   assert.match(source,/currentShot === 'drop' \? 540/);
-  assert.match(source,/currentShot === 'smash' \? 2/);
+  assert.match(source,/attackPose\.swing/);
 });
 test('impact ring and shuttle trail are included',()=>{
   assert.match(source,/impactRing\.visible/);
