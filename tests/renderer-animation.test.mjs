@@ -45,7 +45,7 @@ test('waist pivot rig separates upper body from footwork',()=>{
   assert.match(source,/torsoRig\.position\.y = 0\.75/);
   assert.match(source,/torsoRig\.add\(part\)/);
   assert.match(source,/part\.position\.y -= torsoRig\.position\.y/);
-  assert.match(source,/torsoRig, legs, feet, arms/);
+  assert.match(source,/torsoRig, legs, knees, feet, arms/);
 });
 
 test('legs have articulated knees and shoes attached below the knee',()=>{
@@ -58,4 +58,10 @@ test('arms have animated elbow joints for player and opponent',()=>{
   assert.match(source,/elbow\.add\(forearm\)/);
   assert.match(source,/user\.elbows\[1\]\.rotation\.x/);
   assert.match(source,/opponent\.elbows\[1\]\.rotation\.x/);
+});
+
+test('racket follows dominant forearm rather than floating at torso',()=>{
+  assert.match(source,/elbows\[1\]\.add\(racketRig\)/);
+  assert.match(source,/torsoRig\.remove\(racketRig\)/);
+  assert.match(source,/racketRig\.position\.set\(0, 0\.33, 0\)/);
 });
