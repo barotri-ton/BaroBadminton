@@ -1,8 +1,16 @@
+import { FLIGHT } from './flight.mjs';
 // Arcade AI: predict a reachable intercept and place returns away from the human.
 export function predictIntercept(ball, targetY, maxTime = 1.8) {
   if (!Number.isFinite(ball.vy) || Math.abs(ball.vy) < 1e-6) return { x: ball.x, y: targetY, time: 0 };
-  const time = Math.max(0, Math.min(maxTime, (targetY - ball.y) / ball.vy));
-  return { x: Math.max(0.04, Math.min(0.96, ball.x + ball.vx * time)), y: targetY, time };
+  // Match the exponential horizontal drag used by the shuttle flight model.
+  // If the target lies behind the shuttle or beyond its drag-limited reach,
+  // predict only as far as the configured horizon.
+  const drag = FLIGHT.drag;
+  const distance = (targetY - ball.y) / ball.vy;
+  const ratio = drag * distance;
+  const time = distance <= 0 ? 0 : ratio >= 1 ? maxTime : Math.min(maxTime, -Math.log1p(-ratio) / drag);
+  const travel = -Math.expm1(-drag * time) / drag;
+  return { x: Math.max(0.04, Math.min(0.96, ball.x + ball.vx * travel)), y: targetY, time };
 }
 export function chooseAiReturn(player, difficulty = 'normal', random = Math.random()) {
   const side = player.x < 0.5 ? 0.78 : 0.22;
