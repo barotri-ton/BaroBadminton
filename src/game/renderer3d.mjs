@@ -131,6 +131,7 @@ export function create3DRenderer(canvas) {
       legs.push(leg);
       feet.push(shoe);
     }
+    const eyes = [];
     const arms = [];
     for (const side of [-1, 1]) {
       const arm = new THREE.Group();
@@ -171,6 +172,7 @@ export function create3DRenderer(canvas) {
       const eye = new THREE.Mesh(new THREE.SphereGeometry(0.022, 6, 6), mat('#20242e'));
       eye.position.set(side * 0.085, 1.59, 0.195);
       group.add(eye);
+      eyes.push(eye);
     }
     const racket = new THREE.Mesh(new THREE.TorusGeometry(0.25, 0.035, 6, 14), mat('#e5edf5'));
     racket.position.set(0.48, 1.38, 0);
@@ -201,8 +203,18 @@ export function create3DRenderer(canvas) {
     shaft.rotation.z = -0.6;
     racketRig.add(shaft);
     shaft.position.sub(racketRig.position);
+    // Hierarchical upper-body rig: pivot at waist, independent from the legs.
+    // Preserve existing world-space pose when moving parts into the torso.
+    const torsoRig = new THREE.Group();
+    torsoRig.position.y = 0.75;
+    group.add(torsoRig);
+    for (const part of [body, shirtStripe, collar, hair, fringe, head, nose, mouth, ...eyes, ...arms, racketRig]) {
+      group.remove(part);
+      torsoRig.add(part);
+      part.position.y -= torsoRig.position.y;
+    }
     scene.add(group);
-    return { group, legs, feet, arms, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
+    return { group, torsoRig, legs, feet, arms, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
   }
   const user = athlete('#4fb7ff');
   const opponent = athlete('#f26c79');
@@ -297,8 +309,8 @@ export function create3DRenderer(canvas) {
       actor.feet[1].rotation.x = Math.min(0, gait) * 0.28;
       actor.arms[0].rotation.x = -gait * 0.5;
       actor.arms[1].rotation.x = gait * 0.5;
-      actor.group.rotation.z = THREE.MathUtils.lerp(actor.group.rotation.z, moving ? pose.leanZ : 0, 0.16);
-      actor.group.rotation.x = THREE.MathUtils.lerp(actor.group.rotation.x, moving ? pose.leanX : 0, 0.16);
+      actor.torsoRig.rotation.z = THREE.MathUtils.lerp(actor.torsoRig.rotation.z, moving ? pose.leanZ : 0, 0.16);
+      actor.torsoRig.rotation.x = THREE.MathUtils.lerp(actor.torsoRig.rotation.x, moving ? pose.leanX : 0, 0.16);
       actor.group.position.set(x, moving ? Math.abs(Math.sin(actor.stride)) * 0.045 : Math.sin(now * 0.002) * 0.009, z);
       actor.previous.set(x, 0, z);
     }
