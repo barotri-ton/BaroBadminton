@@ -148,6 +148,9 @@ export function create3DRenderer(canvas) {
   let lastWidth = 0;
   let lastHeight = 0;
   let lastTime = 0;
+  const lookTarget = new THREE.Vector3(0, 0.4, -0.4);
+  let lastSwingPulse = -1;
+  let swingStart = -1000;
   function render(state) {
     if (disposed) return;
     const rect = canvas.getBoundingClientRect();
@@ -169,7 +172,12 @@ export function create3DRenderer(canvas) {
       lastHeight = height;
     }
     const now = performance.now();
+    const frameDelta = Math.min((now - lastTime) / 1000 || 0, 0.05);
     lastTime = now;
+    if (state.swingPulse !== lastSwingPulse) {
+      lastSwingPulse = state.swingPulse;
+      swingStart = now;
+    }
     function animateAthlete(actor, position) {
       const x = (position.x - 0.5) * 6.1;
       const z = (position.y - 0.5) * 13.4;
@@ -186,6 +194,16 @@ export function create3DRenderer(canvas) {
     }
     animateAthlete(user, state.player);
     animateAthlete(opponent, state.bot);
+    const swingProgress = Math.min(1, (now - swingStart) / 420);
+    const swingAngle = swingProgress < 1 ? Math.sin(swingProgress * Math.PI) * 1.5 : 0;
+    user.arms[1].rotation.x = -swingAngle;
+    user.racket.rotation.z = 0.35 - swingAngle * 0.3;
+    const focusX = (state.ball.x - 0.5) * 0.65;
+    const focusZ = (state.ball.y - 0.5) * 1.2;
+    const smooth = 1 - Math.exp(-frameDelta * 2.5);
+    lookTarget.x += (focusX - lookTarget.x) * smooth;
+    lookTarget.z += (focusZ - 0.4 - lookTarget.z) * smooth;
+    camera.lookAt(lookTarget);
     shuttle.position.set((state.ball.x - 0.5) * 6.1, 0.25 + state.ball.z * 2.8, (state.ball.y - 0.5) * 13.4);
     renderer.render(scene, camera);
   }
