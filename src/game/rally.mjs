@@ -12,10 +12,10 @@ export function baselineFaultWinner(positionY) {
   return positionY < 0 ? 1 : 0;
 }
 export function canHumanHit(ball, player, cooldown = 0) {
-  return cooldown <= 0 && ball.vy > 0 && ball.y > 0.48 && ball.y < 0.96 &&
+  return cooldown <= 0 && ball.z > 0 && ball.vy > 0 && ball.y > 0.48 && ball.y < 0.96 &&
     Math.abs(player.x - ball.x) < 0.23 && Math.abs(player.y - ball.y) < 0.24;
 }
 export function canAiHit(ball, bot, reach) {
-  return ball.vy < 0 && ball.y < 0.45 &&
+  return ball.z > 0 && ball.vy < 0 && ball.y < 0.45 &&
     Math.abs(ball.x - bot.x) < reach && Math.abs(ball.y - bot.y) < reach;
 }
