@@ -214,13 +214,18 @@ export function create3DRenderer(canvas) {
     strings.position.copy(racket.position);
     strings.rotation.copy(racket.rotation);
     racketRig.add(strings);
-    // Strings already inherit the racket's local coordinates.
+    // Strings and frame share the same wrist-relative coordinate system.
 
-    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.68, 6), mat('#d4e0ed'));
-    shaft.position.set(0.3, 0.94, 0);
-    shaft.rotation.z = -0.6;
+    // Racket geometry is local to the wrist: grip at origin, head above the grip.
+    racket.position.set(0.16, 0.55, 0);
+    strings.position.copy(racket.position);
+    const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.026, 0.026, 0.48, 6), mat('#d4e0ed'));
+    shaft.position.set(0.07, 0.235, 0);
+    shaft.rotation.z = -0.30;
     racketRig.add(shaft);
-    shaft.position.sub(racketRig.position);
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(0.043, 0.043, 0.20, 8), mat('#26384c'));
+    grip.position.y = 0.015;
+    racketRig.add(grip);
     // Hierarchical upper-body rig: pivot at waist, independent from the legs.
     // Preserve existing world-space pose when moving parts into the torso.
     const torsoRig = new THREE.Group();
@@ -234,7 +239,7 @@ export function create3DRenderer(canvas) {
     // Attach the racket to the dominant forearm, so elbow flexion moves the racket too.
     torsoRig.remove(racketRig);
     elbows[1].add(racketRig);
-    racketRig.position.set(0, 0.33, 0);
+    racketRig.position.set(0, -0.24, 0);
     scene.add(group);
     return { group, torsoRig, legs, knees, feet, arms, elbows, racket, racketRig, strings, shaft, previous: new THREE.Vector3(), stride: 0, facing: 0 };
   }
