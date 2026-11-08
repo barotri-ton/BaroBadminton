@@ -149,7 +149,7 @@ export function create3DRenderer(canvas) {
   let lastHeight = 0;
   let lastTime = 0;
   const lookTarget = new THREE.Vector3(0, 0.4, -0.4);
-  let lastSwingPulse = -1;
+  let lastSwingPulse = 0;
   let swingStart = -1000;
   function render(state) {
     if (disposed) return;
